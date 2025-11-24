@@ -24,8 +24,6 @@ export const authenticateToken = (
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(" ")[1]; // Bearer TOKEN
 
-    console.error("Token", token);
-
     if (!token) {
       return next(new AppError("Authentication token required", ErrorType.UNAUTHORIZED));
     }

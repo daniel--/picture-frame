@@ -5,7 +5,7 @@ import sharp from "sharp";
 import { db } from "./db/index.js";
 import { imagesTable, Image } from "./db/schema.js";
 import { AppError, ErrorType } from "./errors.js";
-import { max } from "drizzle-orm";
+import { max, eq, asc } from "drizzle-orm";
 
 // Ensure uploads directory exists
 const uploadsDir = path.join(process.cwd(), "public", "uploads");
@@ -123,5 +123,109 @@ export async function createImage(input: {
     .returning();
 
   return newImage;
+}
+
+/**
+ * Deletes an image record from the database and its associated files
+ * @param imageId ID of the image to delete
+ * @returns Deleted image record
+ */
+export async function deleteImage(imageId: number): Promise<Image> {
+  // Find the image in the database
+  const [image] = await db
+    .select()
+    .from(imagesTable)
+    .where(eq(imagesTable.id, imageId))
+    .limit(1);
+
+  if (!image) {
+    throw new AppError("Image not found", ErrorType.NOT_FOUND);
+  }
+
+  // Delete the image file from filesystem
+  const imageFilePath = path.join(process.cwd(), "public", image.path);
+  if (fs.existsSync(imageFilePath)) {
+    try {
+      fs.unlinkSync(imageFilePath);
+    } catch (error) {
+      console.error(`Failed to delete image file ${imageFilePath}:`, error);
+      // Continue with database deletion even if file deletion fails
+    }
+  }
+
+  // Delete the thumbnail file from filesystem if it exists
+  if (image.thumbnailPath) {
+    const thumbnailFilePath = path.join(process.cwd(), "public", image.thumbnailPath);
+    if (fs.existsSync(thumbnailFilePath)) {
+      try {
+        fs.unlinkSync(thumbnailFilePath);
+      } catch (error) {
+        console.error(`Failed to delete thumbnail file ${thumbnailFilePath}:`, error);
+        // Continue with database deletion even if file deletion fails
+      }
+    }
+  }
+
+  // Delete the image record from database
+  await db.delete(imagesTable).where(eq(imagesTable.id, imageId));
+
+  return image;
+}
+
+/**
+ * Gets all images ordered by displayOrder
+ * @returns Array of all images sorted by displayOrder
+ */
+export async function getAllImages(): Promise<Image[]> {
+  return await db
+    .select()
+    .from(imagesTable)
+    .orderBy(asc(imagesTable.displayOrder));
+}
+
+/**
+ * Updates the sort order of images
+ * @param imageOrders Array of {id, displayOrder} pairs
+ * @returns Updated images
+ */
+export async function updateImageSortOrder(
+  imageOrders: Array<{ id: number; displayOrder: number }>
+): Promise<Image[]> {
+  // Validate that all display orders are unique
+  const orders = imageOrders.map((io) => io.displayOrder);
+  if (new Set(orders).size !== orders.length) {
+    throw new AppError("Display orders must be unique", ErrorType.BAD_REQUEST);
+  }
+
+  // Use a transaction to ensure atomicity
+  return await db.transaction(async (tx) => {
+    // To avoid unique constraint violations, we use a two-phase update:
+    // Phase 1: Set all display orders to temporary negative values
+    // Phase 2: Set them to their final values
+    
+    // Phase 1: Set temporary negative values
+    let tempOrder = -1;
+    for (const { id } of imageOrders) {
+      await tx
+        .update(imagesTable)
+        .set({ displayOrder: tempOrder })
+        .where(eq(imagesTable.id, id));
+      tempOrder--;
+    }
+
+    // Phase 2: Set final values
+    for (const { id, displayOrder } of imageOrders) {
+      await tx
+        .update(imagesTable)
+        .set({ displayOrder })
+        .where(eq(imagesTable.id, id));
+    }
+
+    // Return all images in the new order
+    return await tx
+      .select()
+      .from(imagesTable)
+      .orderBy(asc(imagesTable.displayOrder));
+  });
 }
 
