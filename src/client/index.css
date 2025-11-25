@@ -1,3 +1,44 @@
+:root {
+  /* Primary Colors */
+  --color-primary-dark: #5f7be9;
+  --color-primary: #785997;
+  --gradient-primary: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 100%);
+
+  /* Text Colors */
+  --color-text-primary: #333;
+  --color-text-secondary: #999;
+  --color-text-white: white;
+  --color-text-white-muted: rgba(255, 255, 255, 0.8);
+
+  /* Background Colors */
+  --color-bg-white: white;
+  --color-bg-white-transparent: rgba(255, 255, 255, 0.95);
+  --color-bg-disabled: #f5f5f5;
+  --color-bg-black: #000;
+  --color-bg-error: #fee;
+
+  /* Border Colors */
+  --color-border-light: #e0e0e0;
+  --color-border-white-light: rgba(255, 255, 255, 0.3);
+  --color-border-white-medium: rgba(255, 255, 255, 0.6);
+  --color-border-subtle: rgba(0, 0, 0, 0.05);
+  --color-border-error: #fcc;
+  --color-border-focus: var(--color-primary);
+
+  /* Error Colors */
+  --color-error: #c33;
+
+  /* Shadow Colors */
+  --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.2);
+  --shadow-primary: 0 4px 12px rgba(118, 75, 162, 0.3);
+  --shadow-primary-light: 0 0 0 3px rgba(118, 75, 162, 0.1);
+  --shadow-white: 0 4px 12px rgba(255, 255, 255, 0.3);
+  --shadow-white-light: 0 0 0 3px rgba(255, 255, 255, 0.2);
+  --shadow-text: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -10,9 +51,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   min-height: 100vh;
-  overflow-x: hidden;
   width: 100%;
 }
 

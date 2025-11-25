@@ -1,7 +1,8 @@
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { api, ApiError } from "./api";
-import { useAuth } from "./useAuth";
+import { useAuth } from "./hooks/useAuth";
+import "./Login.css";
 
 interface LoginResponse {
   token: string;
@@ -20,7 +21,13 @@ function Login() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { setAuth } = useAuth();
+  const { setAuth, isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/");
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -51,8 +58,8 @@ function Login() {
   return (
     <div className="App">
       <div className="container">
+        <div className="card login-card">
         <h1>Login</h1>
-        <div className="card">
           {error && <div className="error-message">{error}</div>}
           <form onSubmit={handleSubmit}>
             <div className="form-group">

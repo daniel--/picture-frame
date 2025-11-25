@@ -1,273 +1,112 @@
+/* Login Page Styles */
 .App {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   min-height: 100vh;
+  padding: 20px;
+}
+
+.App .container {
+  width: 100%;
+  max-width: 420px;
+}
+
+.App h1 {
+  color: var(--color-text-white);
+  text-align: center;
+  margin-bottom: 2rem;
+  font-size: 2.5rem;
+  font-weight: 600;
+  text-shadow: var(--shadow-text);
+}
+
+.App .card {
+  background: var(--color-bg-white-transparent);
+  border-radius: 16px;
+  padding: 2.5rem;
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(10px);
+}
+
+.App .error-message {
+  background-color: var(--color-bg-error);
+  color: var(--color-error);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--color-border-error);
+  font-size: 0.9rem;
+}
+
+.App form {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  padding: 1rem;
-  width: 100%;
-  box-sizing: border-box;
-  overflow-x: hidden;
+  gap: 1.5rem;
 }
 
-@media (min-width: 768px) {
-  .App {
-    padding: 2rem;
-    justify-content: center;
-  }
+.App .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
-.container {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-  padding: 1rem;
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-  overflow-x: hidden;
-}
-
-@media (min-width: 768px) {
-  .container {
-    padding: 2.5rem;
-    max-width: 1200px;
-  }
-}
-
-h1 {
-  color: #333;
-  margin-bottom: 1.5rem;
-  font-size: 2rem;
-  text-align: center;
-}
-
-.card {
-  width: 100%;
-}
-
-.form-group {
-  margin-bottom: 1.5rem;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  color: #555;
+.App .form-group label {
+  color: var(--color-text-primary);
   font-weight: 500;
   font-size: 0.95rem;
 }
 
-.form-group input {
-  width: 100%;
-  padding: 0.75rem;
-  border: 2px solid #e0e0e0;
+.App .form-group input {
+  padding: 0.875rem 1rem;
+  border: 2px solid var(--color-border-light);
   border-radius: 8px;
   font-size: 1rem;
-  transition: border-color 0.3s ease;
+  transition: all 0.2s ease;
+  background-color: var(--color-bg-white);
+  color: var(--color-text-primary);
 }
 
-.form-group input:focus {
+.App .form-group input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--color-border-focus);
+  box-shadow: var(--shadow-primary-light);
 }
 
-.form-group input:disabled {
-  background-color: #f5f5f5;
+.App .form-group input:disabled {
+  background-color: var(--color-bg-disabled);
   cursor: not-allowed;
+  opacity: 0.6;
 }
 
-.error-message {
-  color: #d32f2f;
-  margin-bottom: 1.5rem;
-  padding: 0.875rem;
-  background-color: #ffebee;
-  border: 1px solid #ffcdd2;
-  border-radius: 8px;
-  font-size: 0.9rem;
+.App .form-group input::placeholder {
+  color: var(--color-text-secondary);
 }
 
-.btn {
-  width: 100%;
+.App .btn {
   padding: 0.875rem 1.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: var(--gradient-primary);
+  color: var(--color-text-white);
   border: none;
   border-radius: 8px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  min-height: 44px; /* Touch-friendly minimum size */
+  transition: all 0.2s ease;
+  margin-top: 0.5rem;
 }
 
-@media (min-width: 768px) {
-  .btn {
-    width: auto;
-  }
-}
-
-.btn:hover:not(:disabled) {
+.App .btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: var(--shadow-primary);
 }
 
-.btn:active:not(:disabled) {
+.App .btn:active:not(:disabled) {
   transform: translateY(0);
 }
 
-.btn:disabled {
+.App .btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
-
-.btn-secondary {
-  background: #6c757d;
-}
-
-.btn-secondary:hover:not(:disabled) {
-  box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
-}
-
-.link {
-  display: inline-block;
-  margin-top: 1.5rem;
-  color: #667eea;
-  text-decoration: none;
-  font-weight: 500;
-  transition: color 0.2s ease;
-}
-
-.link:hover {
-  color: #764ba2;
-  text-decoration: underline;
-}
-
-.welcome-message {
-  text-align: center;
-  color: #333;
-  font-size: 1.25rem;
-  margin-bottom: 2rem;
-  padding: 1rem;
-  background: #f8f9fa;
-  border-radius: 8px;
-}
-
-.home-content {
-  text-align: center;
-}
-
-@media (min-width: 768px) {
-  .home-content {
-    text-align: left;
-    flex-direction: row;
-    align-items: center;
-  }
-}
-
-.images-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1rem;
-  width: 100%;
-  box-sizing: border-box;
-  transition: none;
-}
-
-@media (min-width: 480px) {
-  .images-grid {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 1.5rem;
-  }
-  
-  .image-card {
-    padding: 1rem;
-  }
-}
-
-/* Drag and drop styling */
-.image-card {
-  user-select: none;
-  -webkit-user-select: none;
-  cursor: default;
-  will-change: transform;
-  transition: transform 300ms cubic-bezier(0.2, 0, 0.2, 1), opacity 200ms ease;
-}
-
-.image-card:active {
-  cursor: default;
-}
-
-/* Drag handle styling */
-.drag-handle {
-  opacity: 0.3;
-}
-
-.image-card:hover .drag-handle {
-  opacity: 0.7;
-}
-
-.drag-handle:active {
-  cursor: grabbing;
-  opacity: 1;
-}
-
-/* Overlay buttons styling */
-.image-overlay-buttons {
-  opacity: 0.3;
-}
-
-/* Show overlay buttons when hovering over image container or card */
-.image-container:hover .image-overlay-buttons,
-.image-card:hover .image-overlay-buttons,
-.image-overlay-buttons:hover {
-  opacity: 1 !important;
-}
-
-/* Make overlay buttons fully visible on touch devices */
-@media (hover: none) {
-  .image-overlay-buttons {
-    opacity: 1 !important;
-  }
-}
-
-/* Desktop hover effects */
-@media (min-width: 768px) {
-  .image-card {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-  
-  .image-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  }
-  
-  .image-overlay-buttons {
-    opacity: 0.5;
-  }
-}
-
-/* Prevent dragging on buttons */
-.image-overlay-buttons,
-.image-overlay-buttons button {
-  cursor: pointer;
-  user-select: none;
-  pointer-events: auto;
-  -webkit-user-drag: none;
-  user-drag: none;
-}
-
-/* Ensure touch targets are adequate on mobile */
-@media (max-width: 479px) {
-  button {
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
-  }
-  
-  a.btn {
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
-  }
-}
-
 
