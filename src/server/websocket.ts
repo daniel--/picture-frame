@@ -1,6 +1,7 @@
 import { WebSocketServer, WebSocket } from "ws";
 import { getAllImages, updateImageSortOrder } from "./images.js";
 import { Image } from "./db/schema.js";
+import { getSlideDuration, setSlideDuration, getSlideshowState, setSlideshowState } from "./settings.js";
 
 interface ClientWebSocket extends WebSocket {
   isAlive?: boolean;
@@ -15,7 +16,8 @@ type MessageType =
   | { type: "slideshow-previous" }
   | { type: "slideshow-play" }
   | { type: "slideshow-pause" }
-  | { type: "slideshow-goto"; imageId: number };
+  | { type: "slideshow-goto"; imageId: number }
+  | { type: "slideshow-speed"; speedSeconds: number };
 
 /**
  * WebSocket server for real-time image synchronization
@@ -33,10 +35,14 @@ export class ImageWebSocketServer {
     isPlaying: false,
   };
   private autoPlayInterval: NodeJS.Timeout | null = null;
-  private slideDuration = 5000; // 5 seconds per slide
+  private slideDuration = 5000; // 5 seconds per slide (will be loaded from DB)
 
   constructor(server: any) {
     this.wss = new WebSocketServer({ server, path: "/ws" });
+    
+    // Load slide duration and slideshow state from database
+    this.initializeSlideDuration();
+    this.initializeSlideshowState();
 
     this.wss.on("connection", async (ws: ClientWebSocket) => {
       this.clients.add(ws);
@@ -50,6 +56,11 @@ export class ImageWebSocketServer {
           type: "slideshow-state",
           currentImageId: this.slideshowState.currentImageId,
           isPlaying: this.slideshowState.isPlaying,
+        });
+        // Send current slideshow speed
+        this.sendToClient(ws, {
+          type: "slideshow-speed",
+          speedSeconds: this.slideDuration / 1000,
         });
       } catch (error) {
         console.error("Error sending initial state to client:", error);
@@ -96,6 +107,7 @@ export class ImageWebSocketServer {
                 // If current image not found, start at first image
                 this.slideshowState.currentImageId = images[0].id;
               }
+              await this.saveSlideshowState();
               this.broadcastSlideshowState();
             }
             return;
@@ -116,6 +128,7 @@ export class ImageWebSocketServer {
                 // If current image not found, start at last image
                 this.slideshowState.currentImageId = images[images.length - 1].id;
               }
+              await this.saveSlideshowState();
               this.broadcastSlideshowState();
             }
             return;
@@ -129,6 +142,7 @@ export class ImageWebSocketServer {
             }
             this.slideshowState.isPlaying = true;
             this.startAutoPlay();
+            await this.saveSlideshowState();
             this.broadcastSlideshowState();
             return;
           }
@@ -136,6 +150,7 @@ export class ImageWebSocketServer {
           if (message.type === "slideshow-pause") {
             this.slideshowState.isPlaying = false;
             this.stopAutoPlay();
+            await this.saveSlideshowState();
             this.broadcastSlideshowState();
             return;
           }
@@ -145,7 +160,28 @@ export class ImageWebSocketServer {
             // Verify the imageId exists in the current image list
             if (images.some(img => img.id === message.imageId)) {
               this.slideshowState.currentImageId = message.imageId;
+              await this.saveSlideshowState();
               this.broadcastSlideshowState();
+            }
+            return;
+          }
+
+          if (message.type === "slideshow-speed") {
+            // Update slide duration (convert seconds to milliseconds)
+            const newDuration = message.speedSeconds * 1000;
+            // Validate: 1 second to 1 day (86400 seconds)
+            if (newDuration > 0 && newDuration <= 86400000) {
+              this.slideDuration = newDuration;
+              // Save to database
+              setSlideDuration(newDuration).catch((error) => {
+                console.error("Failed to save slide duration to database:", error);
+              });
+              // If currently playing, restart the interval with new speed
+              if (this.slideshowState.isPlaying) {
+                this.startAutoPlay();
+              }
+              // Broadcast the speed change to all clients
+              this.broadcastSlideshowSpeed();
             }
             return;
           }
@@ -228,6 +264,7 @@ export class ImageWebSocketServer {
         // If current image not found, start at first image
         this.slideshowState.currentImageId = images[0].id;
       }
+      await this.saveSlideshowState();
       this.broadcastSlideshowState();
     }, this.slideDuration);
   }
@@ -261,10 +298,12 @@ export class ImageWebSocketServer {
             this.slideshowState.isPlaying = false;
             this.stopAutoPlay();
           }
+          await this.saveSlideshowState();
         }
       } else if (images.length > 0 && this.slideshowState.isPlaying) {
         // If playing but no current image, start at first
         this.slideshowState.currentImageId = images[0].id;
+        await this.saveSlideshowState();
       }
       
       const message = JSON.stringify({ type: "images", images });
@@ -300,11 +339,77 @@ export class ImageWebSocketServer {
   }
 
   /**
+   * Broadcasts the current slideshow speed to all authenticated clients
+   */
+  private broadcastSlideshowSpeed(): void {
+    const message = JSON.stringify({
+      type: "slideshow-speed",
+      speedSeconds: this.slideDuration / 1000,
+    });
+    
+    this.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(message);
+      }
+    });
+  }
+
+  /**
    * Sends a message to a specific client
    */
   private sendToClient(ws: ClientWebSocket, message: MessageType): void {
     if (ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify(message));
+    }
+  }
+
+  /**
+   * Initializes the slide duration from the database
+   */
+  private async initializeSlideDuration(): Promise<void> {
+    try {
+      const duration = await getSlideDuration();
+      this.slideDuration = duration;
+      console.log(`Loaded slide duration from database: ${duration}ms (${duration / 1000}s)`);
+    } catch (error) {
+      console.error("Error loading slide duration from database:", error);
+      // Keep default value (5000ms)
+    }
+  }
+
+  /**
+   * Initializes the slideshow state from the database
+   */
+  private async initializeSlideshowState(): Promise<void> {
+    try {
+      const state = await getSlideshowState();
+      this.slideshowState.currentImageId = state.currentImageId;
+      this.slideshowState.isPlaying = state.isPlaying;
+      
+      // If playing, start the auto-play interval
+      if (state.isPlaying) {
+        this.startAutoPlay();
+      }
+      
+      console.log(`Loaded slideshow state from database: currentImageId=${state.currentImageId}, isPlaying=${state.isPlaying}`);
+    } catch (error) {
+      console.error("Error loading slideshow state from database:", error);
+      // Keep default state
+    }
+  }
+
+  /**
+   * Saves the current slideshow state to the database
+   */
+  private async saveSlideshowState(): Promise<void> {
+    try {
+      await setSlideshowState({
+        currentImageId: this.slideshowState.currentImageId,
+        isPlaying: this.slideshowState.isPlaying,
+      });
+    } catch (error) {
+      console.error("Error saving slideshow state to database:", error);
+      // Don't throw - we don't want to break the slideshow if DB save fails
     }
   }
 

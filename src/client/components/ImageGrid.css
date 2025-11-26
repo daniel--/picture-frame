@@ -1,0 +1,125 @@
+.images-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+  width: 100%;
+}
+
+.sortable-image-container {
+  position: relative;
+}
+
+.grid-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  cursor: grab;
+  transition: transform 0.2s ease;
+  user-select: none;
+}
+
+.grid-image:active {
+  cursor: grabbing;
+}
+
+.grid-image:hover {
+  transform: scale(1.02);
+}
+
+.grid-image-current {
+  box-shadow: 0 0 20px rgba(118, 89, 151, 0.6),
+              0 0 40px rgba(118, 89, 151, 0.4),
+              0 0 60px rgba(118, 89, 151, 0.2),
+              var(--shadow-primary-light);
+  border: 2px solid var(--color-primary);
+  position: relative;
+  z-index: 1;
+}
+
+.grid-image-select-button,
+.grid-image-delete-button {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 10;
+  padding: 0;
+  line-height: 1;
+}
+
+/* Hide buttons by default on desktop, show on hover */
+@media (hover: hover) and (pointer: fine) {
+  .grid-image-select-button,
+  .grid-image-delete-button {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .sortable-image-container:hover .grid-image-select-button,
+  .sortable-image-container:hover .grid-image-delete-button {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+.grid-image-select-button {
+  top: 8px;
+  right: 8px;
+}
+
+.grid-image-delete-button {
+  top: 8px;
+  left: 8px;
+}
+
+.grid-image-select-button svg,
+.grid-image-delete-button svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.grid-image-select-button:hover {
+  background: rgba(118, 89, 151, 0.9);
+  border-color: var(--color-primary);
+  transform: scale(1.1);
+}
+
+.grid-image-delete-button:hover {
+  background: rgba(204, 51, 51, 0.9);
+  border-color: rgba(255, 255, 255, 1);
+  transform: scale(1.1);
+}
+
+.grid-image-select-button:active,
+.grid-image-delete-button:active {
+  transform: scale(0.95);
+}
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+  .images-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 0.75rem;
+  }
+}
+
+/* Small Mobile Styles */
+@media (max-width: 480px) {
+  .images-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 0.5rem;
+  }
+}
+

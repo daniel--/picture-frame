@@ -1,0 +1,32 @@
+.App .login-card {
+  background: var(--gradient-primary) !important;
+  color: var(--color-text-white);
+}
+
+.App .login-card h1 {
+  color: var(--color-text-white) !important;
+}
+
+.App .login-card .form-group label {
+  color: var(--color-text-white) !important;
+}
+
+.App .login-card .form-group input {
+  background-color: var(--color-bg-white-transparent);
+  border-color: var(--color-border-white-light);
+}
+
+.App .login-card .form-group input:focus {
+  border-color: var(--color-border-white-medium);
+  box-shadow: var(--shadow-white-light);
+}
+
+.App .login-card .btn {
+  background: var(--color-bg-white) !important;
+  color: var(--color-primary) !important;
+}
+
+.App .login-card .btn:hover:not(:disabled) {
+  background: var(--color-bg-white-transparent) !important;
+  box-shadow: var(--shadow-lg);
+}

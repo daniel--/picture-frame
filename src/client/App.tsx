@@ -6,6 +6,7 @@ import Login from "./Login";
 import Slideshow from "./Slideshow";
 import { useAuth } from "./hooks/useAuth";
 import { Home } from "./Home";
+import { Settings } from "./Settings";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
@@ -30,6 +31,7 @@ function App() {
       <Routes>
         <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
         <Route path="/slideshow" element={<Slideshow />} />
+        <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
         <Route path="/login" element={<Login />} />
       </Routes>
     </BrowserRouter>

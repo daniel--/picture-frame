@@ -1,0 +1,136 @@
+import { useEffect, useState, useCallback } from "react";
+import useWebSocketHook from "react-use-websocket";
+import { Image } from "../../server/db/schema.js";
+import { api } from "../api.js";
+
+type Message = 
+  | { type: "images"; images: Image[] }
+  | { type: "error"; message: string }
+  | { type: "slideshow-state"; currentImageId: number | null; isPlaying: boolean }
+  | { type: "slideshow-speed"; speedSeconds: number };
+
+export function useSlideShow() {
+  const [images, setImages] = useState<Image[]>([]);
+  const [slideshowState, setSlideshowState] = useState<{ currentImageId: number | null; isPlaying: boolean }>({
+    currentImageId: null,
+    isPlaying: false,
+  });
+  const [slideshowSpeed, setSlideshowSpeed] = useState<number | null>(null);
+
+  // Determine WebSocket URL
+  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+  const host = window.location.host;
+  const wsUrl = `${protocol}//${host}/ws`;
+
+  const {
+    sendMessage,
+    lastMessage,
+    readyState,
+  } = useWebSocketHook(wsUrl, {
+    shouldReconnect: (closeEvent: CloseEvent) => {
+      // Reconnect unless it was a normal closure
+      return closeEvent.code !== 1000;
+    },
+    reconnectInterval: 3000,
+    reconnectAttempts: Infinity,
+  });
+
+  // Handle incoming messages
+  useEffect(() => {
+    if (lastMessage) {
+      try {
+        const message: Message = JSON.parse(lastMessage.data);
+        
+        if (message.type === "images") {
+          setImages(message.images);
+        } else if (message.type === "slideshow-state") {
+          setSlideshowState({
+            currentImageId: message.currentImageId,
+            isPlaying: message.isPlaying,
+          });
+        } else if (message.type === "slideshow-speed") {
+          setSlideshowSpeed(message.speedSeconds);
+          // Update localStorage to keep it in sync
+          localStorage.setItem("slideshowSpeed", message.speedSeconds.toString());
+        } else if (message.type === "error") {
+          console.error("WebSocket error:", message.message);
+        }
+      } catch (err) {
+        console.error("Failed to parse WebSocket message:", err);
+      }
+    }
+  }, [lastMessage]);
+
+  // Helper to send JSON messages
+  const sendJsonMessage = useCallback((message: object) => {
+    sendMessage(JSON.stringify(message));
+  }, [sendMessage]);
+
+  const reorderImages = useCallback((imageOrders: Array<{ id: number; displayOrder: number }>) => {
+    sendJsonMessage({
+      type: "reorder",
+      imageOrders,
+    });
+  }, [sendJsonMessage]);
+
+  const slideshowNext = useCallback(() => {
+    sendJsonMessage({ type: "slideshow-next" });
+  }, [sendJsonMessage]);
+
+  const slideshowPrevious = useCallback(() => {
+    sendJsonMessage({ type: "slideshow-previous" });
+  }, [sendJsonMessage]);
+
+  const slideshowPlay = useCallback(() => {
+    sendJsonMessage({ type: "slideshow-play" });
+  }, [sendJsonMessage]);
+
+  const slideshowPause = useCallback(() => {
+    sendJsonMessage({ type: "slideshow-pause" });
+  }, [sendJsonMessage]);
+
+  const slideshowGoto = useCallback((imageId: number) => {
+    sendJsonMessage({ type: "slideshow-goto", imageId });
+  }, [sendJsonMessage]);
+
+  const updateSlideshowSpeed = useCallback((speedSeconds: number) => {
+    sendJsonMessage({ type: "slideshow-speed", speedSeconds });
+  }, [sendJsonMessage]);
+
+  const deleteImage = useCallback(async (imageId: number) => {
+    try {
+      await api(`/api/images/${imageId}`, { method: "DELETE" });
+      // The WebSocket will automatically update the image list
+    } catch (error) {
+      console.error("Failed to delete image:", error);
+      throw error;
+    }
+  }, []);
+
+  // Map readyState to connected boolean
+  // ReadyState: 0 = CONNECTING, 1 = OPEN, 2 = CLOSING, 3 = CLOSED
+  const connected = readyState === 1;
+
+  const currentImage = slideshowState.currentImageId
+    ? images.find(img => img.id === slideshowState.currentImageId) || null
+    : images.length > 0
+    ? images[0] // Default to first image if no current image set
+    : null;
+
+  return {
+    images,
+    currentImage,
+    connected,
+    reorderImages,
+    slideshowState,
+    slideshowNext,
+    slideshowPrevious,
+    slideshowPlay,
+    slideshowPause,
+    slideshowGoto,
+    deleteImage,
+    updateSlideshowSpeed,
+    slideshowSpeed,
+  };
+}
+

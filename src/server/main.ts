@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import path from "path";
 import ViteExpress from "vite-express";
 import { createServer } from "http";
-import { login, LoginInput } from "./users.js";
+import { login, LoginInput, createUser, CreateUserInput } from "./users.js";
 import { AppError, ErrorType, asyncHandler, errorHandler } from "./errors.js";
 import { authenticateToken, AuthRequest } from "./auth.js";
 import { upload, createImage, generateThumbnail, deleteImage, updateImageSortOrder } from "./images.js";
@@ -49,6 +49,37 @@ app.post(
     );
 
     return res.json({ token, user });
+  })
+);
+
+// Create user endpoint (protected by JWT)
+app.post(
+  "/api/users/create",
+  authenticateToken,
+  asyncHandler(async (req: AuthRequest, res) => {
+    if (!req.user) {
+      throw new AppError("User not authenticated", ErrorType.UNAUTHORIZED);
+    }
+
+    const { name, email, password }: CreateUserInput = req.body;
+
+    if (!name || !email || !password) {
+      throw new AppError("Name, email, and password are required", ErrorType.BAD_REQUEST);
+    }
+
+    // Create the user
+    const newUser = await createUser({ name, email, password });
+
+    return res.json({
+      message: "User created successfully",
+      user: {
+        id: newUser.id,
+        name: newUser.name,
+        email: newUser.email,
+        createdAt: newUser.createdAt,
+        updatedAt: newUser.updatedAt,
+      },
+    });
   })
 );
 

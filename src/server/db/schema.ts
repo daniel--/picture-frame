@@ -26,7 +26,15 @@ export const imagesTable = sqliteTable("images_table", {
   displayOrder: int().notNull().default(0).unique(),
 });
 
+export const settingsTable = sqliteTable("settings_table", {
+  ...baseSchema,
+  key: text().notNull(),
+  value: text().notNull(),
+});
+
 export type Image = InferSelectModel<typeof imagesTable>;
 export type NewImage = InferInsertModel<typeof imagesTable>;
 export type User = InferSelectModel<typeof usersTable>;
 export type NewUser = InferInsertModel<typeof usersTable>;
+export type Setting = InferSelectModel<typeof settingsTable>;
+export type NewSetting = InferInsertModel<typeof settingsTable>;

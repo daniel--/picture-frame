@@ -1,0 +1,22 @@
+.home-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.home-main {
+  flex: 1;
+  padding: 2rem 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 6rem; /* Add padding to account for footer */
+}
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+  .home-main {
+    padding: 1.5rem 1rem;
+    padding-bottom: 5.5rem; /* Adjust for footer on mobile */
+  }
+}
