@@ -10,6 +10,7 @@
   overflow: hidden;
   user-select: none;
   position: relative;
+  touch-action: none;
 }
 
 .slideshow-image-wrapper {
@@ -50,13 +51,13 @@
 /* Old image sliding off to the left */
 .slideshow-image.exiting.exiting-left {
   z-index: 2;
-  animation: slideOutToLeft 0.6s ease-in-out forwards;
+  animation: slideOutToLeft 0.6s ease-in forwards;
 }
 
 /* Old image sliding off to the right */
 .slideshow-image.exiting.exiting-right {
   z-index: 2;
-  animation: slideOutToRight 0.6s ease-in-out forwards;
+  animation: slideOutToRight 0.6s ease-in forwards;
 }
 
 @keyframes slideOutToLeft {

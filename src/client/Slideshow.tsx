@@ -120,30 +120,32 @@ function Slideshow() {
 
   const previousImage = getImageById(previousImageId);
 
-  // Optimistic navigation handlers
-  const handleNext = useCallback(() => {
+  // Optimistic navigation handler
+  const handleNavigation = useCallback((direction: 'left' | 'right') => {
     if (localImages.length === 0 || isTransitioning) return;
     
     const currentIndex = getImageIndex(localCurrentImageId);
-    const nextIndex = (currentIndex + 1) % localImages.length;
-    const nextImageId = localImages[nextIndex].id;
+    let newIndex: number;
+    let slideshowAction: () => void;
     
-    // Next means swipe left (new image comes from right)
-    startTransition(nextImageId, 'left');
-    slideshowNext();
-  }, [localImages, localCurrentImageId, isTransitioning, slideshowNext, getImageIndex, startTransition]);
-
-  const handlePrevious = useCallback(() => {
-    if (localImages.length === 0 || isTransitioning) return;
-
-    const currentIndex = getImageIndex(localCurrentImageId);
-    const previousIndex = (currentIndex - 1 + localImages.length) % localImages.length;
-    const prevImageId = localImages[previousIndex].id;
+    if (direction === 'left') {
+      // Left transition means next image (new image comes from right)
+      newIndex = (currentIndex + 1) % localImages.length;
+      slideshowAction = slideshowNext;
+    } else {
+      // Right transition means previous image (new image comes from left)
+      newIndex = (currentIndex - 1 + localImages.length) % localImages.length;
+      slideshowAction = slideshowPrevious;
+    }
     
-    // Previous means swipe right (new image comes from left)
-    startTransition(prevImageId, 'right');
-    slideshowPrevious();
-  }, [localImages, localCurrentImageId, isTransitioning, slideshowPrevious, getImageIndex, startTransition]);
+    const newImageId = localImages[newIndex].id;
+    startTransition(newImageId, direction);
+    slideshowAction();
+  }, [localImages, localCurrentImageId, isTransitioning, slideshowNext, slideshowPrevious, getImageIndex, startTransition]);
+
+  // Convenience functions for backward compatibility
+  const handleNext = useCallback(() => handleNavigation('left'), [handleNavigation]);
+  const handlePrevious = useCallback(() => handleNavigation('right'), [handleNavigation]);
 
   // Keyboard controls
   useEffect(() => {
@@ -189,6 +191,14 @@ function Slideshow() {
     };
   }, [slideshowState.isPlaying, slideshowPlay, slideshowPause, handleNext, handlePrevious]);
 
+  const bind = useDrag(({ swipe: [swipeX] }) => {
+    if (swipeX > 0) {
+      handlePrevious();
+    } else if (swipeX < 0) {
+      handleNext();
+    }
+  });
+
   if (localImages.length === 0) {
     return (
       <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "var(--color-bg-black)" }}>
@@ -199,6 +209,7 @@ function Slideshow() {
 
   return (
     <div
+      {...bind()}
       className="slideshow-container"
     >
       {localCurrentImage ? (
