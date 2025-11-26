@@ -1,9 +1,10 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDrag } from "@use-gesture/react";
 import { useSlideShow } from "./hooks/useSlideShow";
 import { Image } from "../server/db/schema.js";
 import "./App.css";
+import "./Slideshow.css";
 
 function Slideshow() {
   const navigate = useNavigate();
@@ -21,6 +22,66 @@ function Slideshow() {
   const [localCurrentImageId, setLocalCurrentImageId] = useState<number | null>(
     slideshowState.currentImageId
   );
+  const [previousImageId, setPreviousImageId] = useState<number | null>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [transitionDirection, setTransitionDirection] = useState<'left' | 'right'>('right');
+  const transitionTimeoutRef = useRef<number | null>(null);
+
+  // Image index helpers
+  const getImageIndex = useCallback((imageId: number | null): number => {
+    if (imageId === null) return -1;
+    return localImages.findIndex((img) => img.id === imageId);
+  }, [localImages]);
+
+  const getImageById = useCallback((imageId: number | null): Image | null => {
+    if (imageId === null) return null;
+    return localImages.find((img) => img.id === imageId) || null;
+  }, [localImages]);
+
+  // Calculate transition direction based on current and new indices
+  const calculateTransitionDirection = useCallback((
+    currentIndex: number,
+    newIndex: number
+  ): 'left' | 'right' => {
+    if (currentIndex === -1) return 'right';
+    
+    const diff = newIndex - currentIndex;
+    const halfLength = localImages.length / 2;
+    
+    // Handle wrapping: determine shortest path
+    if (diff > 0 && diff < halfLength) {
+      return 'left';
+    } else if (diff < 0 && Math.abs(diff) < halfLength) {
+      return 'right';
+    } else if (diff > halfLength) {
+      return 'right';
+    } else {
+      return 'left';
+    }
+  }, [localImages.length]);
+
+  // Start a transition to a new image
+  const startTransition = useCallback((
+    newImageId: number,
+    direction: 'left' | 'right'
+  ) => {
+    setTransitionDirection(direction);
+    setPreviousImageId(localCurrentImageId);
+    setIsTransitioning(true);
+    setLocalCurrentImageId(newImageId);
+    
+    // Clear any existing timeout
+    if (transitionTimeoutRef.current) {
+      clearTimeout(transitionTimeoutRef.current);
+    }
+    
+    // End transition after animation completes
+    transitionTimeoutRef.current = window.setTimeout(() => {
+      setIsTransitioning(false);
+      setPreviousImageId(null);
+      transitionTimeoutRef.current = null;
+    }, 600);
+  }, [localCurrentImageId]);
 
   // Sync local state with props
   useEffect(() => {
@@ -28,74 +89,105 @@ function Slideshow() {
   }, [images]);
 
   useEffect(() => {
-    setLocalCurrentImageId(slideshowState.currentImageId);
-  }, [slideshowState.currentImageId]);
+    const newImageId = slideshowState.currentImageId;
+    if (newImageId !== localCurrentImageId && newImageId !== null) {
+      const currentIndex = getImageIndex(localCurrentImageId);
+      const newIndex = getImageIndex(newImageId);
+      const direction = calculateTransitionDirection(currentIndex, newIndex);
+      startTransition(newImageId, direction);
+    } else if (newImageId !== localCurrentImageId) {
+      setLocalCurrentImageId(newImageId);
+      setPreviousImageId(null);
+    }
+  }, [slideshowState.currentImageId, localCurrentImageId, getImageIndex, calculateTransitionDirection, startTransition]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (transitionTimeoutRef.current) {
+        clearTimeout(transitionTimeoutRef.current);
+        transitionTimeoutRef.current = null;
+      }
+    };
+  }, []);
 
   // Compute current image from local state
   const localCurrentImage = localCurrentImageId
-    ? localImages.find((img) => img.id === localCurrentImageId) || null
+    ? getImageById(localCurrentImageId)
     : localImages.length > 0
     ? localImages[0]
     : null;
 
+  const previousImage = getImageById(previousImageId);
+
   // Optimistic navigation handlers
   const handleNext = useCallback(() => {
-    if (localImages.length === 0) return;
+    if (localImages.length === 0 || isTransitioning) return;
     
-    const currentIndex = localCurrentImageId
-      ? localImages.findIndex((img) => img.id === localCurrentImageId)
-      : -1;
-    
+    const currentIndex = getImageIndex(localCurrentImageId);
     const nextIndex = (currentIndex + 1) % localImages.length;
-    setLocalCurrentImageId(localImages[nextIndex].id);
+    const nextImageId = localImages[nextIndex].id;
+    
+    // Next means swipe left (new image comes from right)
+    startTransition(nextImageId, 'left');
     slideshowNext();
-  }, [localImages, localCurrentImageId, slideshowNext]);
+  }, [localImages, localCurrentImageId, isTransitioning, slideshowNext, getImageIndex, startTransition]);
 
   const handlePrevious = useCallback(() => {
-    if (localImages.length === 0) return;
-    
-    const currentIndex = localCurrentImageId
-      ? localImages.findIndex((img) => img.id === localCurrentImageId)
-      : -1;
-    
-    const previousIndex = (currentIndex - 1 + localImages.length) % localImages.length;
-    setLocalCurrentImageId(localImages[previousIndex].id);
-    slideshowPrevious();
-  }, [localImages, localCurrentImageId, slideshowPrevious]);
+    if (localImages.length === 0 || isTransitioning) return;
 
-  // Handle keyboard navigation
+    const currentIndex = getImageIndex(localCurrentImageId);
+    const previousIndex = (currentIndex - 1 + localImages.length) % localImages.length;
+    const prevImageId = localImages[previousIndex].id;
+    
+    // Previous means swipe right (new image comes from left)
+    startTransition(prevImageId, 'right');
+    slideshowPrevious();
+  }, [localImages, localCurrentImageId, isTransitioning, slideshowPrevious, getImageIndex, startTransition]);
+
+  // Keyboard controls
   useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.key === "ArrowLeft") {
-        handlePrevious();
-      } else if (e.key === "ArrowRight") {
-        handleNext();
-      } else if (e.key === " ") {
-        e.preventDefault();
-        if (slideshowState.isPlaying) {
-          slideshowPause();
-        } else {
-          slideshowPlay();
-        }
-      } else if (e.key === "Escape") {
-        navigate("/");
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Ignore if user is typing in an input field
+      if (
+        event.target instanceof HTMLInputElement ||
+        event.target instanceof HTMLTextAreaElement ||
+        (event.target instanceof HTMLElement && event.target.isContentEditable)
+      ) {
+        return;
+      }
+
+      switch (event.key) {
+        case " ": // Spacebar
+        case "p":
+        case "P":
+          event.preventDefault();
+          if (slideshowState.isPlaying) {
+            slideshowPause();
+          } else {
+            slideshowPlay();
+          }
+          break;
+        case "ArrowRight":
+        case "n":
+        case "N":
+          event.preventDefault();
+          handleNext();
+          break;
+        case "ArrowLeft":
+        case "b":
+        case "B":
+          event.preventDefault();
+          handlePrevious();
+          break;
       }
     };
 
-    window.addEventListener("keydown", handleKeyPress);
-    return () => window.removeEventListener("keydown", handleKeyPress);
-  }, [slideshowState.isPlaying, slideshowPlay, slideshowPause, navigate, handleNext, handlePrevious]);
-
-  // Handle swipe/drag gestures (both touch and mouse)
-  const bind = useDrag(({ swipe: [swipeX]}) => {
-      if (swipeX < 0) {
-        handleNext();
-      } else if (swipeX > 0) {
-        handlePrevious();
-      }
-    }, {
-    pointer: { touch: true, mouse: true },
-  });
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [slideshowState.isPlaying, slideshowPlay, slideshowPause, handleNext, handlePrevious]);
 
   if (localImages.length === 0) {
     return (
@@ -107,32 +199,33 @@ function Slideshow() {
 
   return (
     <div
-      {...bind()}
-      style={{
-        height: "100vh",
-        width: "100vw",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: "var(--color-bg-black)",
-        margin: 0,
-        padding: 0,
-        overflow: "hidden",
-        userSelect: "none"
-      }}
+      className="slideshow-container"
     >
       {localCurrentImage ? (
-        <img
-          src={localCurrentImage.path}
-          alt={localCurrentImage.originalName}
-          draggable={false}
-          style={{
-            maxWidth: "100%",
-            maxHeight: "100%",
-            objectFit: "contain",
-            userSelect: "none"
-          }}
-        />
+        <>
+          {/* Current image (revealed underneath) */}
+          <div className="slideshow-image-wrapper">
+            <img
+              key={localCurrentImage.id}
+              src={localCurrentImage.path}
+              alt={localCurrentImage.originalName}
+              draggable={false}
+              className={`slideshow-image ${isTransitioning ? 'entering' : 'active'}`}
+            />
+          </div>
+          {/* Previous image (sliding out on top) */}
+          {previousImage && isTransitioning && (
+            <div className="slideshow-image-wrapper">
+              <img
+                key={previousImage.id}
+                src={previousImage.path}
+                alt={previousImage.originalName}
+                draggable={false}
+                className={`slideshow-image exiting exiting-${transitionDirection}`}
+              />
+            </div>
+          )}
+        </>
       ) : (
         <div style={{ color: "var(--color-text-white)", fontSize: "1.2rem" }}>Loading...</div>
       )}
