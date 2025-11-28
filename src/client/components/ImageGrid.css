@@ -7,6 +7,7 @@
 
 .sortable-image-container {
   position: relative;
+  overflow: visible;
 }
 
 .grid-image {
@@ -24,7 +25,8 @@
   cursor: grabbing;
 }
 
-.grid-image:hover {
+.grid-image:hover,
+.sortable-image-container:hover .grid-image {
   transform: scale(1.02);
 }
 
@@ -56,6 +58,7 @@
   z-index: 10;
   padding: 0;
   line-height: 1;
+  transform-origin: center;
 }
 
 /* Hide buttons by default on desktop, show on hover */
