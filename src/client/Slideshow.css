@@ -11,6 +11,7 @@
   user-select: none;
   position: relative;
   touch-action: none;
+  cursor: none;
 }
 
 .slideshow-image-wrapper {
