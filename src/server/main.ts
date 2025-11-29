@@ -7,7 +7,7 @@ import { createServer } from "http";
 import { login, LoginInput, createUser, CreateUserInput } from "./users.js";
 import { AppError, ErrorType, asyncHandler, errorHandler } from "./errors.js";
 import { authenticateToken, AuthRequest } from "./auth.js";
-import { upload, createImage, generateThumbnail, deleteImage, updateImageSortOrder } from "./images.js";
+import { upload, createImage, generateThumbnail, deleteImage, updateImageSortOrder, stripMetadata } from "./images.js";
 import { ImageWebSocketServer } from "./websocket.js";
 
 const app = express();
@@ -96,6 +96,9 @@ app.post(
     if (!req.user) {
       throw new AppError("User not authenticated", ErrorType.UNAUTHORIZED);
     }
+
+    // Strip metadata from the image
+    await stripMetadata(req.file.path);
 
     // Generate thumbnail (always saved as JPEG)
     const originalExt = path.extname(req.file.filename);

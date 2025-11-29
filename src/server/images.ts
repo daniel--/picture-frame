@@ -56,6 +56,18 @@ export const upload = multer({
   },
 });
 
+export async function stripMetadata(path: string) {
+  try {
+    const s = await sharp(path)
+    const {orientation} = await s.metadata();
+    await sharp(await s.toBuffer()).withMetadata({orientation}).toFile(path);
+
+  } catch (error) {
+    console.error("Error stripping metadata:", error);
+    throw new AppError("Failed to strip metadata", ErrorType.INTERNAL_SERVER_ERROR);
+  }
+}
+
 /**
  * Generates a thumbnail from an image file
  * @param inputPath Path to the original image
@@ -72,6 +84,7 @@ export async function generateThumbnail(
 ): Promise<string> {
   try {
     await sharp(inputPath)
+      .autoOrient()
       .resize(width, height, {
         fit: "inside",
         withoutEnlargement: true,
