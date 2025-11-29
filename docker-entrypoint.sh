@@ -1,0 +1,9 @@
+#!/bin/sh
+set -e
+
+echo "Running database migrations..."
+npm run db:push
+
+echo "Starting server..."
+exec node --import tsx/esm src/server/main.ts
+
