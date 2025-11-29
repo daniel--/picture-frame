@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDrag } from "@use-gesture/react";
 import { useSlideShow } from "./hooks/useSlideShow";
-import { Image } from "../server/db/schema.js";
+import type { Image } from "../server/db/schema.js";
 import "./App.css";
 import "./Slideshow.css";
 
@@ -17,7 +17,7 @@ function Slideshow() {
     slideshowPause,
   } = useSlideShow();
 
-  // Local copy for optimistic updates
+  // Local state for managing transitions and UI
   const [localImages, setLocalImages] = useState<Image[]>(images);
   const [localCurrentImageId, setLocalCurrentImageId] = useState<number | null>(
     slideshowState.currentImageId
@@ -120,28 +120,56 @@ function Slideshow() {
 
   const previousImage = getImageById(previousImageId);
 
-  // Optimistic navigation handler
+  // Preload images for smooth transitions
+  useEffect(() => {
+    if (localImages.length === 0 || localCurrentImageId === null) return;
+
+    const currentIndex = getImageIndex(localCurrentImageId);
+    if (currentIndex === -1) return;
+
+    // Preload next and previous images
+    const nextIndex = (currentIndex + 1) % localImages.length;
+    const prevIndex = (currentIndex - 1 + localImages.length) % localImages.length;
+
+    const nextImage = localImages[nextIndex];
+    const prevImage = localImages[prevIndex];
+
+    // Preload images using Image constructor
+    const preloadImage = (imagePath: string) => {
+      const img = new Image();
+      img.src = imagePath;
+    };
+
+    // Preload next and previous images
+    if (nextImage) {
+      preloadImage(nextImage.path);
+    }
+    if (prevImage) {
+      preloadImage(prevImage.path);
+    }
+
+    // Also preload the one after next and before previous for even smoother transitions
+    const nextNextIndex = (currentIndex + 2) % localImages.length;
+    const prevPrevIndex = (currentIndex - 2 + localImages.length) % localImages.length;
+    
+    if (localImages[nextNextIndex]) {
+      preloadImage(localImages[nextNextIndex].path);
+    }
+    if (localImages[prevPrevIndex]) {
+      preloadImage(localImages[prevPrevIndex].path);
+    }
+  }, [localCurrentImageId, localImages, getImageIndex]);
+
+  // Navigation handler - relies on server to update state and trigger transition
   const handleNavigation = useCallback((direction: 'left' | 'right') => {
     if (localImages.length === 0 || isTransitioning) return;
     
-    const currentIndex = getImageIndex(localCurrentImageId);
-    let newIndex: number;
-    let slideshowAction: () => void;
-    
     if (direction === 'left') {
-      // Left transition means next image (new image comes from right)
-      newIndex = (currentIndex + 1) % localImages.length;
-      slideshowAction = slideshowNext;
+      slideshowNext();
     } else {
-      // Right transition means previous image (new image comes from left)
-      newIndex = (currentIndex - 1 + localImages.length) % localImages.length;
-      slideshowAction = slideshowPrevious;
+      slideshowPrevious();
     }
-    
-    const newImageId = localImages[newIndex].id;
-    startTransition(newImageId, direction);
-    slideshowAction();
-  }, [localImages, localCurrentImageId, isTransitioning, slideshowNext, slideshowPrevious, getImageIndex, startTransition]);
+  }, [localImages.length, isTransitioning, slideshowNext, slideshowPrevious]);
 
   // Convenience functions for backward compatibility
   const handleNext = useCallback(() => handleNavigation('left'), [handleNavigation]);

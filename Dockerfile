@@ -41,6 +41,10 @@ COPY src/scripts ./src/scripts
 COPY tsconfig.json ./
 COPY drizzle.config.ts ./
 
+# Copy and set up entrypoint script
+COPY docker-entrypoint.sh ./
+RUN chmod +x docker-entrypoint.sh
+
 # Create directories for uploads (will be mounted as volume in docker-compose)
 RUN mkdir -p public/uploads/thumbnails
 
@@ -55,6 +59,6 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3000', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
-# Run the production server
-CMD ["node", "--import", "tsx/esm", "src/server/main.ts"]
+# Use entrypoint script to run migrations and start server
+ENTRYPOINT ["./docker-entrypoint.sh"]
 
