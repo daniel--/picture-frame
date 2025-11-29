@@ -1,6 +1,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Image } from "../../server/db/schema.js";
+import { useState, useEffect } from "react";
 
 interface SortableImageProps {
   image: Image;
@@ -18,6 +19,17 @@ export function SortableImage({ image, isCurrent, onSelect, onDelete }: Sortable
     transition,
     isDragging,
   } = useSortable({ id: image.id });
+
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.matchMedia("(max-width: 768px)").matches);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -39,14 +51,39 @@ export function SortableImage({ image, isCurrent, onSelect, onDelete }: Sortable
     }
   };
 
+  // On mobile, use handle for dragging; on desktop, drag the whole image
+  const imageListeners = isMobile ? {} : listeners;
+  const handleListeners = isMobile ? listeners : {};
+
   return (
     <div ref={setNodeRef} style={style} {...attributes} className="sortable-image-container">
       <img
         src={image.thumbnailPath ?? ""}
         alt=""
         className={`grid-image ${isCurrent ? 'grid-image-current' : ''}`}
-        {...listeners}
+        {...imageListeners}
       />
+      {/* Drag handle for mobile */}
+      <div
+        className="grid-image-drag-handle"
+        {...handleListeners}
+      >
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <circle cx="9" cy="9" r="1" />
+          <circle cx="15" cy="9" r="1" />
+          <circle cx="9" cy="15" r="1" />
+          <circle cx="15" cy="15" r="1" />
+        </svg>
+      </div>
       {onSelect && (
         <button
           className="grid-image-select-button"
