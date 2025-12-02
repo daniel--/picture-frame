@@ -50,11 +50,11 @@ export function Header({ userName, connected, onLogout }: HeaderProps) {
             Slideshow
           </NavLink>
           <NavLink 
-            to="/settings" 
+            to="/admin" 
             className={({ isActive }) => `header-nav-link ${isActive ? 'active' : ''}`}
             onClick={closeMobileMenu}
           >
-            Settings
+            Admin
           </NavLink>
         </nav>
         <div className="header-right">

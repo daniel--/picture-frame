@@ -1,49 +1,20 @@
 import { useNavigate } from "react-router-dom";
 import { useState, FormEvent } from "react";
 import { useAuth } from "./hooks/useAuth";
-import "./Settings.css";
+import "./Admin.css";
 import { Header } from "./components/Header";
 import { useSlideShow } from "./hooks/useSlideShow";
 import { SlideshowControls } from "./components/SlideshowControls";
 import { api, ApiError } from "./api";
 
-const SPEED_OPTIONS = [
-  { value: 5, label: "5s" },
-  { value: 60, label: "1min" },
-  { value: 600, label: "10mins" },
-  { value: 3600, label: "1hour" },
-  { value: 18000, label: "5hours" },
-  { value: 86400, label: "1day" },
-] as const;
-
-const DEFAULT_SPEED = 5; // 5 seconds
-
-export function Settings() {
+export function Admin() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { connected, images, slideshowState, slideshowNext, slideshowPrevious, slideshowPlay, slideshowPause, updateSlideshowSpeed, slideshowSpeed, randomOrder, updateRandomOrder } = useSlideShow();
-  
-  // Use speed from server, fallback to default if not loaded yet
-  const speed = slideshowSpeed !== null ? slideshowSpeed : DEFAULT_SPEED;
-  
-  // Use random order from server, fallback to false if not loaded yet
-  const isRandomOrderEnabled = randomOrder !== null ? randomOrder : false;
 
   const handleLogout = () => {
     logout();
     navigate("/login");
-  };
-
-  const handleSpeedChange = (newSpeed: number) => {
-    updateSlideshowSpeed(newSpeed);
-  };
-
-  const handleRandomOrderChange = (enabled: boolean) => {
-    updateRandomOrder(enabled);
-  };
-
-  const handleToggleShuffle = () => {
-    updateRandomOrder(!isRandomOrderEnabled);
   };
 
 
@@ -91,54 +62,8 @@ export function Settings() {
       />
       <main className="settings-main">
         <div className="settings-content">
-          <h2 className="settings-title">Settings</h2>
+          <h2 className="settings-title">Admin</h2>
           
-          <div className="settings-section">
-            <label className="settings-label">
-              Slideshow Speed
-            </label>
-            <div className="settings-speed-control">
-              <div className="settings-speed-options">
-                {SPEED_OPTIONS.map((option) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    className={`settings-speed-option ${speed === option.value ? 'active' : ''}`}
-                    onClick={() => handleSpeedChange(option.value)}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="settings-section">
-            <label className="settings-label">
-              Random Order
-            </label>
-            <div className="settings-random-order-control">
-              <label className="settings-toggle-label">
-                <span className="settings-toggle-wrapper">
-                  <input
-                    type="checkbox"
-                    className="settings-toggle-input"
-                    checked={isRandomOrderEnabled}
-                    onChange={(e) => handleRandomOrderChange(e.target.checked)}
-                    disabled={randomOrder === null}
-                  />
-                  <span className="settings-toggle-slider"></span>
-                </span>
-                <span className="settings-toggle-text">
-                  {isRandomOrderEnabled ? "Enabled" : "Disabled"}
-                </span>
-              </label>
-              <p className="settings-toggle-description">
-                When enabled, images will be shown in random order during auto play mode.
-              </p>
-            </div>
-          </div>
-
           <div className="settings-section">
             <label className="settings-label">
               Create New User
@@ -205,7 +130,9 @@ export function Settings() {
         onPlay={slideshowPlay}
         onPause={slideshowPause}
         randomOrder={randomOrder}
-        onToggleShuffle={handleToggleShuffle}
+        onToggleShuffle={(randomOrder !== null) ? () => updateRandomOrder(!randomOrder) : undefined}
+        slideshowSpeed={slideshowSpeed}
+        onSpeedChange={updateSlideshowSpeed}
         disabled={images.length === 0}
       />
     </div>

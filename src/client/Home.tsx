@@ -17,11 +17,15 @@ export function Home() {
     navigate("/login");
   };
 
-  const { images, reorderImages, currentImage, slideshowState, slideshowNext, slideshowPrevious, slideshowPlay, slideshowPause, slideshowGoto, deleteImage, connected, updateRandomOrder, randomOrder } = useSlideShow();
+  const { images, reorderImages, currentImage, slideshowState, slideshowNext, slideshowPrevious, slideshowPlay, slideshowPause, slideshowGoto, deleteImage, connected, updateRandomOrder, randomOrder, slideshowSpeed, updateSlideshowSpeed } = useSlideShow();
 
   const handleToggleShuffle = () => {
     const isRandomOrderEnabled = randomOrder !== null ? randomOrder : false;
     updateRandomOrder(!isRandomOrderEnabled);
+  };
+
+  const handleSpeedChange = (newSpeed: number) => {
+    updateSlideshowSpeed(newSpeed);
   };
 
   return (
@@ -48,6 +52,8 @@ export function Home() {
         onPause={slideshowPause}
         randomOrder={randomOrder}
         onToggleShuffle={handleToggleShuffle}
+        slideshowSpeed={slideshowSpeed}
+        onSpeedChange={handleSpeedChange}
         disabled={images.length === 0}
       />
     </div>
