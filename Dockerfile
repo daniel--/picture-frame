@@ -18,6 +18,9 @@ RUN npm ci
 COPY src ./src
 COPY index.html ./
 
+# Copy public directory (contains static assets including PWA icons)
+COPY public ./public
+
 # Build the frontend
 RUN npm run build
 
@@ -34,6 +37,7 @@ RUN npm ci --omit=dev && \
 # Copy built files from builder
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/index.html ./
+COPY --from=builder /app/public ./public
 
 # Copy server source files
 COPY src/server ./src/server

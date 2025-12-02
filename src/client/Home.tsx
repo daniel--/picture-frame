@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "./hooks/useAuth";
 import "./Home.css";
 import { useSlideShow } from "./hooks/useSlideShow";
+import { useShareTarget } from "./hooks/useShareTarget";
 import { Header } from "./components/Header";
 import { ImageGrid } from "./components/ImageGrid";
 import { SlideshowControls } from "./components/SlideshowControls";
@@ -9,6 +10,7 @@ import { SlideshowControls } from "./components/SlideshowControls";
 export function Home() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { isProcessing } = useShareTarget();
 
   const handleLogout = () => {
     logout();
