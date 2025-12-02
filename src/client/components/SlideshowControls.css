@@ -73,6 +73,17 @@
   height: 1.5rem;
 }
 
+.footer-btn-shuffle.active {
+  background: var(--color-primary);
+  color: var(--color-text-white);
+  border-color: var(--color-primary);
+}
+
+.footer-btn-shuffle.active:hover:not(:disabled) {
+  background: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
+}
+
 /* Mobile Styles */
 @media (max-width: 768px) {
   .footer-content {

@@ -42,6 +42,10 @@ export function Settings() {
     updateRandomOrder(enabled);
   };
 
+  const handleToggleShuffle = () => {
+    updateRandomOrder(!isRandomOrderEnabled);
+  };
+
 
   // User creation form state
   const [userFormData, setUserFormData] = useState({
@@ -200,6 +204,8 @@ export function Settings() {
         onNext={slideshowNext}
         onPlay={slideshowPlay}
         onPause={slideshowPause}
+        randomOrder={randomOrder}
+        onToggleShuffle={handleToggleShuffle}
         disabled={images.length === 0}
       />
     </div>

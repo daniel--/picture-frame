@@ -17,7 +17,12 @@ export function Home() {
     navigate("/login");
   };
 
-  const { images, reorderImages, currentImage, slideshowState, slideshowNext, slideshowPrevious, slideshowPlay, slideshowPause, slideshowGoto, deleteImage, connected } = useSlideShow();
+  const { images, reorderImages, currentImage, slideshowState, slideshowNext, slideshowPrevious, slideshowPlay, slideshowPause, slideshowGoto, deleteImage, connected, updateRandomOrder, randomOrder } = useSlideShow();
+
+  const handleToggleShuffle = () => {
+    const isRandomOrderEnabled = randomOrder !== null ? randomOrder : false;
+    updateRandomOrder(!isRandomOrderEnabled);
+  };
 
   return (
     <div className="home-container">
@@ -41,6 +46,8 @@ export function Home() {
         onNext={slideshowNext}
         onPlay={slideshowPlay}
         onPause={slideshowPause}
+        randomOrder={randomOrder}
+        onToggleShuffle={handleToggleShuffle}
         disabled={images.length === 0}
       />
     </div>
