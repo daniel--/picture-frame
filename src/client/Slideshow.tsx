@@ -120,19 +120,9 @@ function Slideshow() {
 
   const previousImage = getImageById(previousImageId);
 
-  // Preload images for smooth transitions
+  // Preload all images for smooth transitions
   useEffect(() => {
-    if (localImages.length === 0 || localCurrentImageId === null) return;
-
-    const currentIndex = getImageIndex(localCurrentImageId);
-    if (currentIndex === -1) return;
-
-    // Preload next and previous images
-    const nextIndex = (currentIndex + 1) % localImages.length;
-    const prevIndex = (currentIndex - 1 + localImages.length) % localImages.length;
-
-    const nextImage = localImages[nextIndex];
-    const prevImage = localImages[prevIndex];
+    if (localImages.length === 0) return;
 
     // Preload images using Image constructor
     const preloadImage = (imagePath: string) => {
@@ -140,25 +130,11 @@ function Slideshow() {
       img.src = imagePath;
     };
 
-    // Preload next and previous images
-    if (nextImage) {
-      preloadImage(nextImage.path);
-    }
-    if (prevImage) {
-      preloadImage(prevImage.path);
-    }
-
-    // Also preload the one after next and before previous for even smoother transitions
-    const nextNextIndex = (currentIndex + 2) % localImages.length;
-    const prevPrevIndex = (currentIndex - 2 + localImages.length) % localImages.length;
-    
-    if (localImages[nextNextIndex]) {
-      preloadImage(localImages[nextNextIndex].path);
-    }
-    if (localImages[prevPrevIndex]) {
-      preloadImage(localImages[prevPrevIndex].path);
-    }
-  }, [localCurrentImageId, localImages, getImageIndex]);
+    // Preload all images
+    localImages.forEach((image) => {
+      preloadImage(image.path);
+    });
+  }, [localImages]);
 
   // Navigation handler - relies on server to update state and trigger transition
   const handleNavigation = useCallback((direction: 'left' | 'right') => {
