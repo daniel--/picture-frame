@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import { useState } from "react";
 import "./Header.css";
 
@@ -22,7 +22,9 @@ export function Header({ userName, connected, onLogout }: HeaderProps) {
   return (
     <header className="header">
       <div className="header-content">
-        <h1 className="header-title">Family Photos</h1>
+        <Link to="/" className="header-title-link">
+          <h1 className="header-title">Family Photos</h1>
+        </Link>
         <button 
           className="header-hamburger"
           onClick={toggleMobileMenu}
@@ -33,9 +35,27 @@ export function Header({ userName, connected, onLogout }: HeaderProps) {
           <span className={`header-hamburger-line ${mobileMenuOpen ? 'open' : ''}`}></span>
         </button>
         <nav className={`header-nav ${mobileMenuOpen ? 'mobile-open' : ''}`}>
-          <Link to="/" className="header-nav-link" onClick={closeMobileMenu}>Home</Link>
-          <Link to="/slideshow" className="header-nav-link" onClick={closeMobileMenu}>Slideshow</Link>
-          <Link to="/settings" className="header-nav-link" onClick={closeMobileMenu}>Settings</Link>
+          <NavLink 
+            to="/" 
+            className={({ isActive }) => `header-nav-link ${isActive ? 'active' : ''}`}
+            onClick={closeMobileMenu}
+          >
+            Home
+          </NavLink>
+          <NavLink 
+            to="/slideshow" 
+            className={({ isActive }) => `header-nav-link ${isActive ? 'active' : ''}`}
+            onClick={closeMobileMenu}
+          >
+            Slideshow
+          </NavLink>
+          <NavLink 
+            to="/settings" 
+            className={({ isActive }) => `header-nav-link ${isActive ? 'active' : ''}`}
+            onClick={closeMobileMenu}
+          >
+            Settings
+          </NavLink>
         </nav>
         <div className="header-right">
           {userName && (

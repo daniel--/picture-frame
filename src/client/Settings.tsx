@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect, FormEvent } from "react";
+import { useState, FormEvent } from "react";
 import { useAuth } from "./hooks/useAuth";
 import "./Settings.css";
 import { Header } from "./components/Header";
@@ -21,26 +21,13 @@ const DEFAULT_SPEED = 5; // 5 seconds
 export function Settings() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const { connected, images, slideshowState, slideshowNext, slideshowPrevious, slideshowPlay, slideshowPause, updateSlideshowSpeed, slideshowSpeed } = useSlideShow();
+  const { connected, images, slideshowState, slideshowNext, slideshowPrevious, slideshowPlay, slideshowPause, updateSlideshowSpeed, slideshowSpeed, randomOrder, updateRandomOrder } = useSlideShow();
   
-  const [speed, setSpeed] = useState(() => {
-    const saved = localStorage.getItem("slideshowSpeed");
-    return saved ? parseInt(saved, 10) : DEFAULT_SPEED;
-  });
-
-  // Sync local state with server speed updates
-  useEffect(() => {
-    if (slideshowSpeed !== null) {
-      setSpeed(slideshowSpeed);
-    }
-  }, [slideshowSpeed]);
-
-  useEffect(() => {
-    // Send initial speed to server on mount
-    const initialSpeed = localStorage.getItem("slideshowSpeed");
-    const speedToSend = initialSpeed ? parseInt(initialSpeed, 10) : DEFAULT_SPEED;
-    updateSlideshowSpeed(speedToSend);
-  }, [updateSlideshowSpeed]); // Only on mount, but include updateSlideshowSpeed for linting
+  // Use speed from server, fallback to default if not loaded yet
+  const speed = slideshowSpeed !== null ? slideshowSpeed : DEFAULT_SPEED;
+  
+  // Use random order from server, fallback to false if not loaded yet
+  const isRandomOrderEnabled = randomOrder !== null ? randomOrder : false;
 
   const handleLogout = () => {
     logout();
@@ -48,15 +35,13 @@ export function Settings() {
   };
 
   const handleSpeedChange = (newSpeed: number) => {
-    setSpeed(newSpeed);
-    localStorage.setItem("slideshowSpeed", newSpeed.toString());
     updateSlideshowSpeed(newSpeed);
   };
 
-  const formatSpeedLabel = (seconds: number): string => {
-    const option = SPEED_OPTIONS.find(opt => opt.value === seconds);
-    return option ? option.label : `${seconds}s`;
+  const handleRandomOrderChange = (enabled: boolean) => {
+    updateRandomOrder(enabled);
   };
+
 
   // User creation form state
   const [userFormData, setUserFormData] = useState({
@@ -121,6 +106,32 @@ export function Settings() {
                   </button>
                 ))}
               </div>
+            </div>
+          </div>
+
+          <div className="settings-section">
+            <label className="settings-label">
+              Random Order
+            </label>
+            <div className="settings-random-order-control">
+              <label className="settings-toggle-label">
+                <span className="settings-toggle-wrapper">
+                  <input
+                    type="checkbox"
+                    className="settings-toggle-input"
+                    checked={isRandomOrderEnabled}
+                    onChange={(e) => handleRandomOrderChange(e.target.checked)}
+                    disabled={randomOrder === null}
+                  />
+                  <span className="settings-toggle-slider"></span>
+                </span>
+                <span className="settings-toggle-text">
+                  {isRandomOrderEnabled ? "Enabled" : "Disabled"}
+                </span>
+              </label>
+              <p className="settings-toggle-description">
+                When enabled, images will be shown in random order during auto play mode.
+              </p>
             </div>
           </div>
 

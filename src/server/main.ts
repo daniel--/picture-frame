@@ -9,6 +9,7 @@ import { AppError, ErrorType, asyncHandler, errorHandler } from "./errors.js";
 import { authenticateToken, AuthRequest } from "./auth.js";
 import { upload, createImage, generateThumbnail, deleteImage, updateImageSortOrder, stripMetadata } from "./images.js";
 import { ImageWebSocketServer } from "./websocket.js";
+import { getRandomOrder, setRandomOrder } from "./settings.js";
 
 const app = express();
 
@@ -218,6 +219,48 @@ app.post(
         createdAt: img.createdAt,
       })),
     });
+  })
+);
+
+// Get random order setting endpoint (protected by JWT)
+app.get(
+  "/api/settings/random-order",
+  authenticateToken,
+  asyncHandler(async (req: AuthRequest, res) => {
+    if (!req.user) {
+      throw new AppError("User not authenticated", ErrorType.UNAUTHORIZED);
+    }
+
+    const randomOrder = await getRandomOrder();
+    return res.json({ randomOrder });
+  })
+);
+
+// Set random order setting endpoint (protected by JWT)
+app.post(
+  "/api/settings/random-order",
+  authenticateToken,
+  asyncHandler(async (req: AuthRequest, res) => {
+    if (!req.user) {
+      throw new AppError("User not authenticated", ErrorType.UNAUTHORIZED);
+    }
+
+    const { randomOrder }: { randomOrder: boolean } = req.body;
+
+    if (typeof randomOrder !== "boolean") {
+      throw new AppError("randomOrder must be a boolean", ErrorType.BAD_REQUEST);
+    }
+
+    await setRandomOrder(randomOrder);
+
+    // Notify WebSocket server to reload the setting
+    if (wsServer) {
+      wsServer.reloadRandomOrderSetting().catch((error) => {
+        console.error("Failed to reload random order setting in WebSocket server:", error);
+      });
+    }
+
+    return res.json({ message: "Random order setting updated successfully", randomOrder });
   })
 );
 

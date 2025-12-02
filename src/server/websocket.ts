@@ -1,7 +1,7 @@
 import { WebSocketServer, WebSocket } from "ws";
 import { getAllImages, updateImageSortOrder } from "./images.js";
 import { Image } from "./db/schema.js";
-import { getSlideDuration, setSlideDuration, getSlideshowState, setSlideshowState } from "./settings.js";
+import { getSlideDuration, setSlideDuration, getSlideshowState, setSlideshowState, getRandomOrder, setRandomOrder } from "./settings.js";
 
 interface ClientWebSocket extends WebSocket {
   isAlive?: boolean;
@@ -17,7 +17,8 @@ type MessageType =
   | { type: "slideshow-play" }
   | { type: "slideshow-pause" }
   | { type: "slideshow-goto"; imageId: number }
-  | { type: "slideshow-speed"; speedSeconds: number };
+  | { type: "slideshow-speed"; speedSeconds: number }
+  | { type: "slideshow-random-order"; randomOrder: boolean };
 
 /**
  * WebSocket server for real-time image synchronization
@@ -36,13 +37,15 @@ export class ImageWebSocketServer {
   };
   private autoPlayInterval: NodeJS.Timeout | null = null;
   private slideDuration = 5000; // 5 seconds per slide (will be loaded from DB)
+  private randomOrder = false; // Random order setting (will be loaded from DB)
 
   constructor(server: any) {
     this.wss = new WebSocketServer({ server, path: "/ws" });
     
-    // Load slide duration and slideshow state from database
+    // Load slide duration, slideshow state, and random order setting from database
     this.initializeSlideDuration();
     this.initializeSlideshowState();
+    this.initializeRandomOrder();
 
     this.wss.on("connection", async (ws: ClientWebSocket) => {
       this.clients.add(ws);
@@ -61,6 +64,11 @@ export class ImageWebSocketServer {
         this.sendToClient(ws, {
           type: "slideshow-speed",
           speedSeconds: this.slideDuration / 1000,
+        });
+        // Send current random order setting
+        this.sendToClient(ws, {
+          type: "slideshow-random-order",
+          randomOrder: this.randomOrder,
         });
       } catch (error) {
         console.error("Error sending initial state to client:", error);
@@ -185,6 +193,18 @@ export class ImageWebSocketServer {
             }
             return;
           }
+
+          if (message.type === "slideshow-random-order") {
+            // Update random order setting
+            this.randomOrder = message.randomOrder;
+            // Save to database
+            setRandomOrder(message.randomOrder).catch((error) => {
+              console.error("Failed to save random order setting to database:", error);
+            });
+            // Broadcast the random order change to all clients
+            this.broadcastRandomOrder();
+            return;
+          }
         } catch (error: any) {
           console.error("WebSocket message error:", error);
           this.sendToClient(ws, {
@@ -257,12 +277,32 @@ export class ImageWebSocketServer {
         : -1;
       
       if (currentIndex >= 0) {
-        // Move to next image
-        const nextIndex = (currentIndex + 1) % images.length;
-        this.slideshowState.currentImageId = images[nextIndex].id;
+        // Move to next image - use random selection if enabled, otherwise sequential
+        if (this.randomOrder) {
+          // Random selection: pick a random image that's not the current one
+          const availableImages = images.filter(img => img.id !== this.slideshowState.currentImageId);
+          if (availableImages.length > 0) {
+            const randomIndex = Math.floor(Math.random() * availableImages.length);
+            this.slideshowState.currentImageId = availableImages[randomIndex].id;
+          } else {
+            // Only one image, so just keep it
+            this.slideshowState.currentImageId = images[0].id;
+          }
+        } else {
+          // Sequential selection
+          const nextIndex = (currentIndex + 1) % images.length;
+          this.slideshowState.currentImageId = images[nextIndex].id;
+        }
       } else if (images.length > 0) {
-        // If current image not found, start at first image
-        this.slideshowState.currentImageId = images[0].id;
+        // If current image not found, pick based on random order setting
+        if (this.randomOrder) {
+          // Pick a random image
+          const randomIndex = Math.floor(Math.random() * images.length);
+          this.slideshowState.currentImageId = images[randomIndex].id;
+        } else {
+          // Start at first image
+          this.slideshowState.currentImageId = images[0].id;
+        }
       }
       await this.saveSlideshowState();
       this.broadcastSlideshowState();
@@ -355,6 +395,22 @@ export class ImageWebSocketServer {
   }
 
   /**
+   * Broadcasts the current random order setting to all authenticated clients
+   */
+  private broadcastRandomOrder(): void {
+    const message = JSON.stringify({
+      type: "slideshow-random-order",
+      randomOrder: this.randomOrder,
+    });
+    
+    this.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(message);
+      }
+    });
+  }
+
+  /**
    * Sends a message to a specific client
    */
   private sendToClient(ws: ClientWebSocket, message: MessageType): void {
@@ -411,6 +467,27 @@ export class ImageWebSocketServer {
       console.error("Error saving slideshow state to database:", error);
       // Don't throw - we don't want to break the slideshow if DB save fails
     }
+  }
+
+  /**
+   * Initializes the random order setting from the database
+   */
+  private async initializeRandomOrder(): Promise<void> {
+    try {
+      const randomOrder = await getRandomOrder();
+      this.randomOrder = randomOrder;
+    } catch (error) {
+      console.error("Error loading random order setting from database:", error);
+      // Keep default value (false)
+    }
+  }
+
+  /**
+   * Reloads the random order setting from the database
+   * Called when the setting is updated via API
+   */
+  async reloadRandomOrderSetting(): Promise<void> {
+    await this.initializeRandomOrder();
   }
 
   /**

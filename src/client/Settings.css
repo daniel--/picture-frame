@@ -109,6 +109,82 @@
   color: var(--color-text-secondary);
 }
 
+/* Random Order Toggle Styles */
+.settings-random-order-control {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.settings-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.settings-toggle-wrapper {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.settings-toggle-input {
+  position: absolute;
+  width: 48px;
+  height: 24px;
+  appearance: none;
+  background-color: var(--color-border-light);
+  border-radius: 12px;
+  outline: none;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+  margin: 0;
+  padding: 0;
+}
+
+.settings-toggle-input:checked {
+  background-color: var(--color-primary);
+}
+
+.settings-toggle-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.settings-toggle-slider {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: white;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+}
+
+.settings-toggle-input:checked ~ .settings-toggle-slider {
+  transform: translateX(24px);
+}
+
+.settings-toggle-text {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.settings-toggle-description {
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
 /* User Creation Form Styles */
 .settings-user-form {
   display: flex;

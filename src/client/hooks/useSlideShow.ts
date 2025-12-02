@@ -7,7 +7,8 @@ type Message =
   | { type: "images"; images: Image[] }
   | { type: "error"; message: string }
   | { type: "slideshow-state"; currentImageId: number | null; isPlaying: boolean }
-  | { type: "slideshow-speed"; speedSeconds: number };
+  | { type: "slideshow-speed"; speedSeconds: number }
+  | { type: "slideshow-random-order"; randomOrder: boolean };
 
 export function useSlideShow() {
   const [images, setImages] = useState<Image[]>([]);
@@ -16,6 +17,7 @@ export function useSlideShow() {
     isPlaying: false,
   });
   const [slideshowSpeed, setSlideshowSpeed] = useState<number | null>(null);
+  const [randomOrder, setRandomOrder] = useState<boolean | null>(null);
 
   // Determine WebSocket URL
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
@@ -50,8 +52,8 @@ export function useSlideShow() {
           });
         } else if (message.type === "slideshow-speed") {
           setSlideshowSpeed(message.speedSeconds);
-          // Update localStorage to keep it in sync
-          localStorage.setItem("slideshowSpeed", message.speedSeconds.toString());
+        } else if (message.type === "slideshow-random-order") {
+          setRandomOrder(message.randomOrder);
         } else if (message.type === "error") {
           console.error("WebSocket error:", message.message);
         }
@@ -97,6 +99,10 @@ export function useSlideShow() {
     sendJsonMessage({ type: "slideshow-speed", speedSeconds });
   }, [sendJsonMessage]);
 
+  const updateRandomOrder = useCallback((randomOrder: boolean) => {
+    sendJsonMessage({ type: "slideshow-random-order", randomOrder });
+  }, [sendJsonMessage]);
+
   const deleteImage = useCallback(async (imageId: number) => {
     try {
       await api(`/api/images/${imageId}`, { method: "DELETE" });
@@ -131,6 +137,8 @@ export function useSlideShow() {
     deleteImage,
     updateSlideshowSpeed,
     slideshowSpeed,
+    randomOrder,
+    updateRandomOrder,
   };
 }
 

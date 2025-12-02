@@ -18,6 +18,16 @@
   gap: 1rem;
 }
 
+.header-title-link {
+  text-decoration: none;
+  color: inherit;
+  transition: opacity 0.2s ease;
+}
+
+.header-title-link:hover {
+  opacity: 0.8;
+}
+
 .header-title {
   font-size: 1.5rem;
   font-weight: 600;
@@ -89,6 +99,12 @@
 
 .header-nav-link:active {
   transform: translateY(0);
+}
+
+.header-nav-link.active {
+  background: rgba(255, 255, 255, 0.2);
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .header-right {
@@ -176,13 +192,19 @@
     order: 1;
   }
 
+  .header-title-link {
+    order: 2;
+    flex: 0 0 auto;
+    min-width: 0;
+    overflow: hidden;
+  }
+
   .header-title {
     font-size: 1.1rem;
     flex: 0 0 auto;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
-    order: 2;
   }
 
   .header-nav {
@@ -224,6 +246,11 @@
   .header-nav-link:hover {
     background: rgba(255, 255, 255, 0.15);
     transform: none;
+  }
+
+  .header-nav-link.active {
+    background: rgba(255, 255, 255, 0.25);
+    font-weight: 600;
   }
 
   .header-right {

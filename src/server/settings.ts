@@ -5,6 +5,7 @@ import { settingsTable } from "./db/schema.js";
 const SLIDE_DURATION_KEY = "slideDuration";
 const SLIDESHOW_IS_PLAYING_KEY = "slideshowIsPlaying";
 const SLIDESHOW_CURRENT_IMAGE_ID_KEY = "slideshowCurrentImageId";
+const SLIDESHOW_RANDOM_ORDER_KEY = "slideshowRandomOrder";
 
 /**
  * Gets the slide duration from the database, or returns the default value
@@ -189,6 +190,70 @@ export async function setSlideshowState(state: SlideshowState): Promise<void> {
     }
   } catch (error) {
     console.error("Error saving slideshow state to database:", error);
+    throw error;
+  }
+}
+
+/**
+ * Gets the random order setting from the database, or returns the default value (false)
+ * @returns true if random order is enabled, false otherwise
+ */
+export async function getRandomOrder(): Promise<boolean> {
+  try {
+    const setting = await db
+      .select()
+      .from(settingsTable)
+      .where(eq(settingsTable.key, SLIDESHOW_RANDOM_ORDER_KEY))
+      .limit(1)
+      .then((rows) => rows[0]);
+
+    if (setting) {
+      return setting.value === "true";
+    }
+  } catch (error) {
+    console.error("Error reading random order setting from database:", error);
+  }
+
+  // Return default value (false = sequential order)
+  return false;
+}
+
+/**
+ * Sets the random order setting in the database
+ * @param enabled true to enable random order, false to use sequential order
+ */
+export async function setRandomOrder(enabled: boolean): Promise<void> {
+  try {
+    // Check if setting exists
+    const existing = await db
+      .select()
+      .from(settingsTable)
+      .where(eq(settingsTable.key, SLIDESHOW_RANDOM_ORDER_KEY))
+      .limit(1)
+      .then((rows) => rows[0]);
+
+    const valueStr = enabled ? "true" : "false";
+    const updatedAt = new Date().toISOString();
+
+    if (existing) {
+      // Update existing setting
+      await db
+        .update(settingsTable)
+        .set({
+          value: valueStr,
+          updatedAt: updatedAt,
+        })
+        .where(eq(settingsTable.key, SLIDESHOW_RANDOM_ORDER_KEY));
+    } else {
+      // Insert new setting
+      await db.insert(settingsTable).values({
+        key: SLIDESHOW_RANDOM_ORDER_KEY,
+        value: valueStr,
+        updatedAt: updatedAt,
+      });
+    }
+  } catch (error) {
+    console.error("Error saving random order setting to database:", error);
     throw error;
   }
 }
