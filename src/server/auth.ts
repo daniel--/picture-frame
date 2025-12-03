@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { AppError, ErrorType } from "./errors.js";
+import { env } from "./env.js";
 
 export interface AuthRequest extends Request {
   user?: {
@@ -12,7 +13,8 @@ export interface AuthRequest extends Request {
 
 /**
  * Middleware to verify JWT token and attach user info to request
- * Usage: app.post("/protected-route", authenticateToken, asyncHandler(async (req, res) => { ... }))
+ * After this middleware executes successfully, req.user is guaranteed to exist in route handlers
+ * Usage: app.post("/protected-route", authenticateToken, asyncHandler(async (req: AuthRequest, res) => { ... }))
  */
 export const authenticateToken = (
   req: Request,
@@ -28,15 +30,8 @@ export const authenticateToken = (
       return next(new AppError("Authentication token required", ErrorType.UNAUTHORIZED));
     }
 
-    // Get JWT secret from environment
-    const jwtSecret = process.env.JWT_SECRET;
-    if (!jwtSecret) {
-      console.error("JWT_SECRET environment variable is not set");
-      return next(new AppError("Server configuration error", ErrorType.INTERNAL_SERVER_ERROR));
-    }
-
     // Verify token
-    const decoded = jwt.verify(token, jwtSecret) as {
+    const decoded = jwt.verify(token, env.JWT_SECRET) as {
       id: number;
       email: string;
       name: string;

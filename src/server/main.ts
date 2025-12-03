@@ -7,9 +7,10 @@ import { createServer } from "http";
 import { login, LoginInput, createUser, CreateUserInput } from "./users.js";
 import { AppError, ErrorType, asyncHandler, errorHandler } from "./errors.js";
 import { authenticateToken, AuthRequest } from "./auth.js";
-import { upload, createImage, generateThumbnail, deleteImage, updateImageSortOrder, stripMetadata } from "./images.js";
+import { upload, createImage, generateThumbnail, deleteImage, updateImageSortOrder, stripMetadata, toImageDTO } from "./images.js";
 import { ImageWebSocketServer } from "./websocket.js";
 import { getRandomOrder, setRandomOrder } from "./settings.js";
+import { env } from "./env.js";
 
 const app = express();
 
@@ -32,13 +33,6 @@ app.post(
     // Authenticate user
     const user = await login({ email, password });
 
-    // Get JWT secret from environment
-    const jwtSecret = process.env.JWT_SECRET;
-    if (!jwtSecret) {
-      console.error("JWT_SECRET environment variable is not set");
-      throw new AppError("Server configuration error", ErrorType.INTERNAL_SERVER_ERROR);
-    }
-
     // Generate JWT token
     const token = jwt.sign(
       {
@@ -46,7 +40,7 @@ app.post(
         email: user.email,
         name: user.name,
       },
-      jwtSecret
+      env.JWT_SECRET
     );
 
     return res.json({ token, user });
@@ -58,10 +52,7 @@ app.post(
   "/api/users/create",
   authenticateToken,
   asyncHandler(async (req: AuthRequest, res) => {
-    if (!req.user) {
-      throw new AppError("User not authenticated", ErrorType.UNAUTHORIZED);
-    }
-
+    // authenticateToken middleware ensures req.user exists
     const { name, email, password }: CreateUserInput = req.body;
 
     if (!name || !email || !password) {
@@ -94,10 +85,6 @@ app.post(
       throw new AppError("No image file provided", ErrorType.BAD_REQUEST);
     }
 
-    if (!req.user) {
-      throw new AppError("User not authenticated", ErrorType.UNAUTHORIZED);
-    }
-
     // Strip metadata from the image
     await stripMetadata(req.file.path);
 
@@ -117,9 +104,9 @@ app.post(
       console.error("Thumbnail generation failed:", error);
     }
 
-    // Create image record in database
+    // Create image record in database (req.user guaranteed by authenticateToken middleware)
     const image = await createImage({
-      userId: req.user.id,
+      userId: req.user!.id,
       filename: req.file.filename,
       originalName: req.file.originalname,
       mimeType: req.file.mimetype,
@@ -133,16 +120,7 @@ app.post(
       await wsServer.broadcastImages();
     }
 
-    return res.json({
-      id: image.id,
-      filename: image.filename,
-      originalName: image.originalName,
-      mimeType: image.mimeType,
-      size: image.size,
-      url: image.path,
-      thumbnailUrl: image.thumbnailPath,
-      createdAt: image.createdAt,
-    });
+    return res.json(toImageDTO(image));
   })
 );
 
@@ -151,10 +129,7 @@ app.delete(
   "/api/images/:id",
   authenticateToken,
   asyncHandler(async (req: AuthRequest, res) => {
-    if (!req.user) {
-      throw new AppError("User not authenticated", ErrorType.UNAUTHORIZED);
-    }
-
+    // authenticateToken middleware ensures req.user exists
     const imageId = parseInt(req.params.id, 10);
     if (isNaN(imageId)) {
       throw new AppError("Invalid image ID", ErrorType.BAD_REQUEST);
@@ -180,10 +155,7 @@ app.post(
   "/api/images/reorder",
   authenticateToken,
   asyncHandler(async (req: AuthRequest, res) => {
-    if (!req.user) {
-      throw new AppError("User not authenticated", ErrorType.UNAUTHORIZED);
-    }
-
+    // authenticateToken middleware ensures req.user exists
     const { imageOrders }: { imageOrders: Array<{ id: number; displayOrder: number }> } = req.body;
 
     if (!Array.isArray(imageOrders)) {
@@ -207,17 +179,7 @@ app.post(
 
     return res.json({
       message: "Sort order updated successfully",
-      images: images.map((img) => ({
-        id: img.id,
-        filename: img.filename,
-        originalName: img.originalName,
-        mimeType: img.mimeType,
-        size: img.size,
-        url: img.path,
-        thumbnailUrl: img.thumbnailPath,
-        displayOrder: img.displayOrder,
-        createdAt: img.createdAt,
-      })),
+      images: images.map(toImageDTO),
     });
   })
 );
@@ -227,10 +189,7 @@ app.get(
   "/api/settings/random-order",
   authenticateToken,
   asyncHandler(async (req: AuthRequest, res) => {
-    if (!req.user) {
-      throw new AppError("User not authenticated", ErrorType.UNAUTHORIZED);
-    }
-
+    // authenticateToken middleware ensures req.user exists
     const randomOrder = await getRandomOrder();
     return res.json({ randomOrder });
   })
@@ -241,10 +200,7 @@ app.post(
   "/api/settings/random-order",
   authenticateToken,
   asyncHandler(async (req: AuthRequest, res) => {
-    if (!req.user) {
-      throw new AppError("User not authenticated", ErrorType.UNAUTHORIZED);
-    }
-
+    // authenticateToken middleware ensures req.user exists
     const { randomOrder }: { randomOrder: boolean } = req.body;
 
     if (typeof randomOrder !== "boolean") {
@@ -267,13 +223,6 @@ app.post(
 // Error handling middleware (must be last)
 app.use(errorHandler);
 
-// Initialize WebSocket server
-const jwtSecret = process.env.JWT_SECRET;
-if (!jwtSecret) {
-  console.error("JWT_SECRET environment variable is not set");
-  process.exit(1);
-}
-
 let wsServer: ImageWebSocketServer | null = null;
 
 // Create HTTP server and attach Express app
@@ -283,13 +232,11 @@ const server = createServer(app);
 wsServer = new ImageWebSocketServer(server);
 
 // Start server and configure ViteExpress
-const port = 3000;
-server.listen(port, () => {
-  console.log("Server is listening on port 3000...");
+server.listen(env.PORT, () => {
+  console.log(`Server is listening on port ${env.PORT}...`);
   console.log("WebSocket server initialized on /ws");
   
   // Configure ViteExpress to use the existing server
-  const mode = (process.env.NODE_ENV === "production" ? "production" : "development") as "development" | "production";
-  ViteExpress.config({ mode });
+  ViteExpress.config({ mode: env.NODE_ENV });
   ViteExpress.bind(app, server);
 });

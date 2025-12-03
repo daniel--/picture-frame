@@ -1,7 +1,8 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Image } from "../../server/db/schema.js";
-import { useState, useEffect } from "react";
+import { useIsMobile } from "../hooks/useMediaQuery.js";
+import { DragHandleIcon, StarIcon, DeleteIcon } from "./icons/index.js";
 
 interface SortableImageProps {
   image: Image;
@@ -20,16 +21,7 @@ export function SortableImage({ image, isCurrent, onSelect, onDelete }: Sortable
     isDragging,
   } = useSortable({ id: image.id });
 
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.matchMedia("(max-width: 768px)").matches);
-    };
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
+  const isMobile = useIsMobile();
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -68,21 +60,7 @@ export function SortableImage({ image, isCurrent, onSelect, onDelete }: Sortable
         className="grid-image-drag-handle"
         {...handleListeners}
       >
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <circle cx="9" cy="9" r="1" />
-          <circle cx="15" cy="9" r="1" />
-          <circle cx="9" cy="15" r="1" />
-          <circle cx="15" cy="15" r="1" />
-        </svg>
+        <DragHandleIcon width={20} height={20} />
       </div>
       {onSelect && (
         <button
@@ -95,18 +73,7 @@ export function SortableImage({ image, isCurrent, onSelect, onDelete }: Sortable
           title="Select as current slideshow image"
           aria-label="Select as current slideshow image"
         >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="currentColor"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-          </svg>
+          <StarIcon width={16} height={16} />
         </button>
       )}
       {onDelete && (
@@ -120,22 +87,7 @@ export function SortableImage({ image, isCurrent, onSelect, onDelete }: Sortable
           title="Delete image"
           aria-label="Delete image"
         >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M3 6h18" />
-            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-            <line x1="10" y1="11" x2="10" y2="17" />
-            <line x1="14" y1="11" x2="14" y2="17" />
-          </svg>
+          <DeleteIcon width={16} height={16} />
         </button>
       )}
     </div>

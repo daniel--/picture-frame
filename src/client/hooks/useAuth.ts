@@ -1,4 +1,5 @@
 import { useLocalStorage } from "usehooks-ts";
+import { useNavigate } from "react-router-dom";
 
 interface User {
   id: number;
@@ -14,6 +15,7 @@ interface UseAuthReturn {
   token: string | null;
   setAuth: (token: string, user: User) => void;
   logout: () => void;
+  logoutAndRedirect: () => void;
 }
 
 /**
@@ -22,6 +24,7 @@ interface UseAuthReturn {
 export function useAuth(): UseAuthReturn {
   const [token, setToken] = useLocalStorage<string | null>("token", null);
   const [user, setUser] = useLocalStorage<User | null>("user", null);
+  const navigate = useNavigate();
 
   const setAuth = (newToken: string, newUser: User) => {
     setToken(newToken);
@@ -33,12 +36,18 @@ export function useAuth(): UseAuthReturn {
     setUser(null);
   };
 
+  const logoutAndRedirect = () => {
+    logout();
+    navigate("/login");
+  };
+
   return {
     user,
     isAuthenticated: !!token,
     token,
     setAuth,
     logout,
+    logoutAndRedirect,
   };
 }
 

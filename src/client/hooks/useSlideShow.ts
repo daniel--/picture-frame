@@ -2,13 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import useWebSocketHook from "react-use-websocket";
 import { Image } from "../../server/db/schema.js";
 import { api } from "../api.js";
-
-type Message = 
-  | { type: "images"; images: Image[] }
-  | { type: "error"; message: string }
-  | { type: "slideshow-state"; currentImageId: number | null; isPlaying: boolean }
-  | { type: "slideshow-speed"; speedSeconds: number }
-  | { type: "slideshow-random-order"; randomOrder: boolean };
+import { WebSocketMessage } from "../../shared/websocket-types.js";
 
 export function useSlideShow() {
   const [images, setImages] = useState<Image[]>([]);
@@ -41,7 +35,7 @@ export function useSlideShow() {
   useEffect(() => {
     if (lastMessage) {
       try {
-        const message: Message = JSON.parse(lastMessage.data);
+        const message: WebSocketMessage = JSON.parse(lastMessage.data);
         
         if (message.type === "images") {
           setImages(message.images);

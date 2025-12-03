@@ -34,19 +34,18 @@ export async function api<T>(
   }
 
   // Add Authorization header if token exists
+  // useLocalStorage from usehooks-ts stores values as JSON strings
   const tokenRaw = localStorage.getItem("token");
-  let token: string | null = null;
-  if (tokenRaw) {
+  if (tokenRaw && tokenRaw !== "null") {
     try {
-      // Parse JSON if it's stored as JSON (useLocalStorage stringifies values)
-      token = JSON.parse(tokenRaw);
+      const token = JSON.parse(tokenRaw);
+      if (token) {
+        requestHeaders["Authorization"] = `Bearer ${token}`;
+      }
     } catch {
-      // If parsing fails, use the raw value (plain string)
-      token = tokenRaw;
+      // Fallback: if it's not JSON, use as-is (shouldn't happen with useLocalStorage)
+      requestHeaders["Authorization"] = `Bearer ${tokenRaw}`;
     }
-  }
-  if (token) {
-    requestHeaders["Authorization"] = `Bearer ${token}`;
   }
 
   const response = await fetch(url, {

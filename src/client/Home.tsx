@@ -1,4 +1,3 @@
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "./hooks/useAuth";
 import "./Home.css";
 import { useSlideShow } from "./hooks/useSlideShow";
@@ -8,14 +7,8 @@ import { ImageGrid } from "./components/ImageGrid";
 import { SlideshowControls } from "./components/SlideshowControls";
 
 export function Home() {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const { user, logoutAndRedirect } = useAuth();
   const { isProcessing } = useShareTarget();
-
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
 
   const { images, reorderImages, currentImage, slideshowState, slideshowNext, slideshowPrevious, slideshowPlay, slideshowPause, slideshowGoto, deleteImage, connected, updateRandomOrder, randomOrder, slideshowSpeed, updateSlideshowSpeed } = useSlideShow();
 
@@ -33,7 +26,7 @@ export function Home() {
       <Header
         userName={user?.name ?? null}
         connected={connected}
-        onLogout={handleLogout}
+        onLogout={logoutAndRedirect}
       />
       <main className="home-main">
         <ImageGrid

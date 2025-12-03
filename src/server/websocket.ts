@@ -2,23 +2,11 @@ import { WebSocketServer, WebSocket } from "ws";
 import { getAllImages, updateImageSortOrder } from "./images.js";
 import { Image } from "./db/schema.js";
 import { getSlideDuration, setSlideDuration, getSlideshowState, setSlideshowState, getRandomOrder, setRandomOrder } from "./settings.js";
+import { WebSocketMessage } from "../shared/websocket-types.js";
 
 interface ClientWebSocket extends WebSocket {
   isAlive?: boolean;
 }
-
-type MessageType = 
-  | { type: "images"; images: Image[] }
-  | { type: "error"; message: string }
-  | { type: "reorder"; imageOrders: Array<{ id: number; displayOrder: number }> }
-  | { type: "slideshow-state"; currentImageId: number | null; isPlaying: boolean }
-  | { type: "slideshow-next" }
-  | { type: "slideshow-previous" }
-  | { type: "slideshow-play" }
-  | { type: "slideshow-pause" }
-  | { type: "slideshow-goto"; imageId: number }
-  | { type: "slideshow-speed"; speedSeconds: number }
-  | { type: "slideshow-random-order"; randomOrder: boolean };
 
 /**
  * WebSocket server for real-time image synchronization
@@ -82,129 +70,8 @@ export class ImageWebSocketServer {
       // Handle incoming messages
       ws.on("message", async (data: Buffer) => {
         try {
-          const message = JSON.parse(data.toString()) as MessageType;
-
-          // Handle reorder request
-          if (message.type === "reorder") {
-            try {
-              await updateImageSortOrder(message.imageOrders);
-              // Broadcast updated list to all clients
-              await this.broadcastImages();
-            } catch (error: any) {
-              this.sendToClient(ws, {
-                type: "error",
-                message: error.message || "Failed to update sort order",
-              });
-            }
-            return;
-          }
-
-          // Handle slideshow control messages
-          if (message.type === "slideshow-next") {
-            const images = await getAllImages();
-            if (images.length > 0) {
-              const currentIndex = this.slideshowState.currentImageId
-                ? images.findIndex(img => img.id === this.slideshowState.currentImageId)
-                : -1;
-              
-              if (currentIndex >= 0) {
-                // Move to next image
-                const nextIndex = (currentIndex + 1) % images.length;
-                this.slideshowState.currentImageId = images[nextIndex].id;
-              } else if (images.length > 0) {
-                // If current image not found, start at first image
-                this.slideshowState.currentImageId = images[0].id;
-              }
-              await this.saveSlideshowState();
-              this.broadcastSlideshowState();
-            }
-            return;
-          }
-
-          if (message.type === "slideshow-previous") {
-            const images = await getAllImages();
-            if (images.length > 0) {
-              const currentIndex = this.slideshowState.currentImageId
-                ? images.findIndex(img => img.id === this.slideshowState.currentImageId)
-                : -1;
-              
-              if (currentIndex >= 0) {
-                // Move to previous image
-                const prevIndex = (currentIndex - 1 + images.length) % images.length;
-                this.slideshowState.currentImageId = images[prevIndex].id;
-              } else if (images.length > 0) {
-                // If current image not found, start at last image
-                this.slideshowState.currentImageId = images[images.length - 1].id;
-              }
-              await this.saveSlideshowState();
-              this.broadcastSlideshowState();
-            }
-            return;
-          }
-
-          if (message.type === "slideshow-play") {
-            const images = await getAllImages();
-            // If no current image set, start at first image
-            if (!this.slideshowState.currentImageId && images.length > 0) {
-              this.slideshowState.currentImageId = images[0].id;
-            }
-            this.slideshowState.isPlaying = true;
-            this.startAutoPlay();
-            await this.saveSlideshowState();
-            this.broadcastSlideshowState();
-            return;
-          }
-
-          if (message.type === "slideshow-pause") {
-            this.slideshowState.isPlaying = false;
-            this.stopAutoPlay();
-            await this.saveSlideshowState();
-            this.broadcastSlideshowState();
-            return;
-          }
-
-          if (message.type === "slideshow-goto") {
-            const images = await getAllImages();
-            // Verify the imageId exists in the current image list
-            if (images.some(img => img.id === message.imageId)) {
-              this.slideshowState.currentImageId = message.imageId;
-              await this.saveSlideshowState();
-              this.broadcastSlideshowState();
-            }
-            return;
-          }
-
-          if (message.type === "slideshow-speed") {
-            // Update slide duration (convert seconds to milliseconds)
-            const newDuration = message.speedSeconds * 1000;
-            // Validate: 1 second to 1 day (86400 seconds)
-            if (newDuration > 0 && newDuration <= 86400000) {
-              this.slideDuration = newDuration;
-              // Save to database
-              setSlideDuration(newDuration).catch((error) => {
-                console.error("Failed to save slide duration to database:", error);
-              });
-              // If currently playing, restart the interval with new speed
-              if (this.slideshowState.isPlaying) {
-                this.startAutoPlay();
-              }
-              // Broadcast the speed change to all clients
-              this.broadcastSlideshowSpeed();
-            }
-            return;
-          }
-
-          if (message.type === "slideshow-random-order") {
-            // Update random order setting
-            this.randomOrder = message.randomOrder;
-            // Save to database
-            setRandomOrder(message.randomOrder).catch((error) => {
-              console.error("Failed to save random order setting to database:", error);
-            });
-            // Broadcast the random order change to all clients
-            this.broadcastRandomOrder();
-            return;
-          }
+          const message = JSON.parse(data.toString()) as WebSocketMessage;
+          await this.handleMessage(ws, message);
         } catch (error: any) {
           console.error("WebSocket message error:", error);
           this.sendToClient(ws, {
@@ -245,6 +112,177 @@ export class ImageWebSocketServer {
     this.wss.on("close", () => {
       clearInterval(interval);
     });
+  }
+
+  /**
+   * Main message handler that delegates to specific handlers
+   */
+  private async handleMessage(ws: ClientWebSocket, message: WebSocketMessage): Promise<void> {
+    switch (message.type) {
+      case "reorder":
+        await this.handleReorderMessage(ws, message);
+        break;
+      case "slideshow-next":
+        await this.handleSlideshowNext();
+        break;
+      case "slideshow-previous":
+        await this.handleSlideshowPrevious();
+        break;
+      case "slideshow-play":
+        await this.handleSlideshowPlay();
+        break;
+      case "slideshow-pause":
+        await this.handleSlideshowPause();
+        break;
+      case "slideshow-goto":
+        await this.handleSlideshowGoto(message.imageId);
+        break;
+      case "slideshow-speed":
+        await this.handleSlideshowSpeed(message.speedSeconds);
+        break;
+      case "slideshow-random-order":
+        await this.handleSlideshowRandomOrder(message.randomOrder);
+        break;
+    }
+  }
+
+  /**
+   * Handles image reorder requests
+   */
+  private async handleReorderMessage(
+    ws: ClientWebSocket,
+    message: { type: "reorder"; imageOrders: Array<{ id: number; displayOrder: number }> }
+  ): Promise<void> {
+    try {
+      await updateImageSortOrder(message.imageOrders);
+      // Broadcast updated list to all clients
+      await this.broadcastImages();
+    } catch (error: any) {
+      this.sendToClient(ws, {
+        type: "error",
+        message: error.message || "Failed to update sort order",
+      });
+    }
+  }
+
+  /**
+   * Handles slideshow next requests
+   */
+  private async handleSlideshowNext(): Promise<void> {
+    const images = await getAllImages();
+    if (images.length > 0) {
+      const currentIndex = this.slideshowState.currentImageId
+        ? images.findIndex(img => img.id === this.slideshowState.currentImageId)
+        : -1;
+      
+      if (currentIndex >= 0) {
+        // Move to next image
+        const nextIndex = (currentIndex + 1) % images.length;
+        this.slideshowState.currentImageId = images[nextIndex].id;
+      } else if (images.length > 0) {
+        // If current image not found, start at first image
+        this.slideshowState.currentImageId = images[0].id;
+      }
+      await this.saveSlideshowState();
+      this.broadcastSlideshowState();
+    }
+  }
+
+  /**
+   * Handles slideshow previous requests
+   */
+  private async handleSlideshowPrevious(): Promise<void> {
+    const images = await getAllImages();
+    if (images.length > 0) {
+      const currentIndex = this.slideshowState.currentImageId
+        ? images.findIndex(img => img.id === this.slideshowState.currentImageId)
+        : -1;
+      
+      if (currentIndex >= 0) {
+        // Move to previous image
+        const prevIndex = (currentIndex - 1 + images.length) % images.length;
+        this.slideshowState.currentImageId = images[prevIndex].id;
+      } else if (images.length > 0) {
+        // If current image not found, start at last image
+        this.slideshowState.currentImageId = images[images.length - 1].id;
+      }
+      await this.saveSlideshowState();
+      this.broadcastSlideshowState();
+    }
+  }
+
+  /**
+   * Handles slideshow play requests
+   */
+  private async handleSlideshowPlay(): Promise<void> {
+    const images = await getAllImages();
+    // If no current image set, start at first image
+    if (!this.slideshowState.currentImageId && images.length > 0) {
+      this.slideshowState.currentImageId = images[0].id;
+    }
+    this.slideshowState.isPlaying = true;
+    this.startAutoPlay();
+    await this.saveSlideshowState();
+    this.broadcastSlideshowState();
+  }
+
+  /**
+   * Handles slideshow pause requests
+   */
+  private async handleSlideshowPause(): Promise<void> {
+    this.slideshowState.isPlaying = false;
+    this.stopAutoPlay();
+    await this.saveSlideshowState();
+    this.broadcastSlideshowState();
+  }
+
+  /**
+   * Handles slideshow goto requests
+   */
+  private async handleSlideshowGoto(imageId: number): Promise<void> {
+    const images = await getAllImages();
+    // Verify the imageId exists in the current image list
+    if (images.some(img => img.id === imageId)) {
+      this.slideshowState.currentImageId = imageId;
+      await this.saveSlideshowState();
+      this.broadcastSlideshowState();
+    }
+  }
+
+  /**
+   * Handles slideshow speed change requests
+   */
+  private async handleSlideshowSpeed(speedSeconds: number): Promise<void> {
+    // Update slide duration (convert seconds to milliseconds)
+    const newDuration = speedSeconds * 1000;
+    // Validate: 1 second to 1 day (86400 seconds)
+    if (newDuration > 0 && newDuration <= 86400000) {
+      this.slideDuration = newDuration;
+      // Save to database
+      setSlideDuration(newDuration).catch((error) => {
+        console.error("Failed to save slide duration to database:", error);
+      });
+      // If currently playing, restart the interval with new speed
+      if (this.slideshowState.isPlaying) {
+        this.startAutoPlay();
+      }
+      // Broadcast the speed change to all clients
+      this.broadcastSlideshowSpeed();
+    }
+  }
+
+  /**
+   * Handles slideshow random order change requests
+   */
+  private async handleSlideshowRandomOrder(randomOrder: boolean): Promise<void> {
+    // Update random order setting
+    this.randomOrder = randomOrder;
+    // Save to database
+    setRandomOrder(randomOrder).catch((error) => {
+      console.error("Failed to save random order setting to database:", error);
+    });
+    // Broadcast the random order change to all clients
+    this.broadcastRandomOrder();
   }
 
   /**
@@ -413,7 +451,7 @@ export class ImageWebSocketServer {
   /**
    * Sends a message to a specific client
    */
-  private sendToClient(ws: ClientWebSocket, message: MessageType): void {
+  private sendToClient(ws: ClientWebSocket, message: WebSocketMessage): void {
     if (ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify(message));
     }

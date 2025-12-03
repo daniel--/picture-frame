@@ -1,64 +1,21 @@
-import { useNavigate } from "react-router-dom";
-import { useState, FormEvent } from "react";
 import { useAuth } from "./hooks/useAuth";
 import "./Admin.css";
 import { Header } from "./components/Header";
 import { useSlideShow } from "./hooks/useSlideShow";
 import { SlideshowControls } from "./components/SlideshowControls";
-import { api, ApiError } from "./api";
+import { useUserForm } from "./hooks/useUserForm";
 
 export function Admin() {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const { user, logoutAndRedirect } = useAuth();
   const { connected, images, slideshowState, slideshowNext, slideshowPrevious, slideshowPlay, slideshowPause, updateSlideshowSpeed, slideshowSpeed, randomOrder, updateRandomOrder } = useSlideShow();
-
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
-
-
-  // User creation form state
-  const [userFormData, setUserFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-  });
-  const [userFormError, setUserFormError] = useState<string | null>(null);
-  const [userFormSuccess, setUserFormSuccess] = useState<string | null>(null);
-  const [isCreatingUser, setIsCreatingUser] = useState(false);
-
-  const handleCreateUser = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setUserFormError(null);
-    setUserFormSuccess(null);
-    setIsCreatingUser(true);
-
-    try {
-      await api("/api/users/create", {
-        method: "POST",
-        body: userFormData,
-      });
-
-      setUserFormSuccess("User created successfully!");
-      setUserFormData({ name: "", email: "", password: "" });
-    } catch (err) {
-      if (err instanceof ApiError) {
-        setUserFormError(err.message);
-      } else {
-        setUserFormError("Failed to create user. Please try again.");
-      }
-    } finally {
-      setIsCreatingUser(false);
-    }
-  };
+  const { formData, setFormData, error, success, isSubmitting, handleSubmit } = useUserForm();
 
   return (
     <div className="settings-container">
       <Header
         userName={user?.name ?? null}
         connected={connected}
-        onLogout={handleLogout}
+        onLogout={logoutAndRedirect}
       />
       <main className="settings-main">
         <div className="settings-content">
@@ -68,12 +25,12 @@ export function Admin() {
             <label className="settings-label">
               Create New User
             </label>
-            <form onSubmit={handleCreateUser} className="settings-user-form">
-              {userFormError && (
-                <div className="settings-form-error">{userFormError}</div>
+            <form onSubmit={handleSubmit} className="settings-user-form">
+              {error && (
+                <div className="settings-form-error">{error}</div>
               )}
-              {userFormSuccess && (
-                <div className="settings-form-success">{userFormSuccess}</div>
+              {success && (
+                <div className="settings-form-success">{success}</div>
               )}
               <div className="settings-form-group">
                 <label htmlFor="user-name">Name</label>
@@ -81,10 +38,10 @@ export function Admin() {
                   id="user-name"
                   type="text"
                   placeholder="Enter name"
-                  value={userFormData.name}
-                  onChange={(e) => setUserFormData({ ...userFormData, name: e.target.value })}
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
-                  disabled={isCreatingUser}
+                  disabled={isSubmitting}
                 />
               </div>
               <div className="settings-form-group">
@@ -93,10 +50,10 @@ export function Admin() {
                   id="user-email"
                   type="email"
                   placeholder="Enter email"
-                  value={userFormData.email}
-                  onChange={(e) => setUserFormData({ ...userFormData, email: e.target.value })}
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   required
-                  disabled={isCreatingUser}
+                  disabled={isSubmitting}
                 />
               </div>
               <div className="settings-form-group">
@@ -105,19 +62,19 @@ export function Admin() {
                   id="user-password"
                   type="password"
                   placeholder="Enter password (min 8 characters)"
-                  value={userFormData.password}
-                  onChange={(e) => setUserFormData({ ...userFormData, password: e.target.value })}
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   required
                   minLength={8}
-                  disabled={isCreatingUser}
+                  disabled={isSubmitting}
                 />
               </div>
               <button
                 type="submit"
-                disabled={isCreatingUser}
+                disabled={isSubmitting}
                 className="settings-form-submit"
               >
-                {isCreatingUser ? "Creating..." : "Create User"}
+                {isSubmitting ? "Creating..." : "Create User"}
               </button>
             </form>
           </div>

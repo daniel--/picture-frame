@@ -56,12 +56,38 @@ export const upload = multer({
   },
 });
 
-export async function stripMetadata(path: string) {
-  try {
-    const s = await sharp(path)
-    const {orientation} = await s.metadata();
-    await sharp(await s.toBuffer()).withMetadata({orientation}).toFile(path);
+/**
+ * Converts an Image entity to a DTO for API responses
+ * @param image The image entity from the database
+ * @returns Image DTO for API responses
+ */
+export function toImageDTO(image: Image) {
+  return {
+    id: image.id,
+    filename: image.filename,
+    originalName: image.originalName,
+    mimeType: image.mimeType,
+    size: image.size,
+    url: image.path,
+    thumbnailUrl: image.thumbnailPath,
+    displayOrder: image.displayOrder,
+    createdAt: image.createdAt,
+  };
+}
 
+export async function stripMetadata(imagePath: string) {
+  try {
+    const s = sharp(imagePath);
+    const { orientation } = await s.metadata();
+    const buffer = await s.toBuffer();
+    
+    // Write to a temporary file first for atomic operation
+    const tempPath = `${imagePath}.tmp`;
+    await sharp(buffer).withMetadata({ orientation }).toFile(tempPath);
+    
+    // Atomically replace the original file
+    const fs = await import("fs/promises");
+    await fs.rename(tempPath, imagePath);
   } catch (error) {
     console.error("Error stripping metadata:", error);
     throw new AppError("Failed to strip metadata", ErrorType.INTERNAL_SERVER_ERROR);

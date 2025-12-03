@@ -28,7 +28,7 @@ export const imagesTable = sqliteTable("images_table", {
 
 export const settingsTable = sqliteTable("settings_table", {
   ...baseSchema,
-  key: text().notNull(),
+  key: text().notNull().unique(),
   value: text().notNull(),
 });
 
