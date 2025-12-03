@@ -39,6 +39,7 @@ export function ImageGrid({
 }: ImageGridProps) {
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const [items, setItems] = useState<Image[]>(images);
+  const [activeImageId, setActiveImageId] = useState<number | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -106,8 +107,10 @@ export function ImageGrid({
               key={image.id} 
               image={image} 
               isCurrent={currentImageId === image.id}
+              isActive={activeImageId === image.id}
               onSelect={onSelectImage}
               onDelete={onDeleteImage}
+              onToggleActive={setActiveImageId}
             />
           ))}
         </div>

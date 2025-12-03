@@ -84,6 +84,24 @@
   }
 }
 
+/* On mobile (touch devices), hide buttons by default and show when active */
+@media (hover: none) and (pointer: coarse) {
+  .grid-image-select-button,
+  .grid-image-delete-button,
+  .grid-image-drag-handle {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .sortable-image-container.active .grid-image-select-button,
+  .sortable-image-container.active .grid-image-delete-button,
+  .sortable-image-container.active .grid-image-drag-handle {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
 .grid-image-select-button {
   top: 8px;
   right: 8px;

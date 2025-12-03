@@ -5,8 +5,8 @@
 To automatically turn off the HDMI display at 10 PM and turn it back on at 8 AM, add the following lines to your crontab:
 
 ```sh
-0 22 * * * wlr-randr --output HDMI-A-1 --off
-0  8 * * * wlr-randr --output HDMI-A-1 --on
+0 22 * * * XDG_RUNTIME_DIR=/run/user/1000 wlr-randr --output HDMI-A-1 -off                      
+0  8 * * * XDG_RUNTIME_DIR=/run/user/1000 wlr-randr --output HDMI-A-1 --on
 ```
 
 Edit your crontab with:
