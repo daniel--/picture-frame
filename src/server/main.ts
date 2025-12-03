@@ -231,12 +231,16 @@ const server = createServer(app);
 // Initialize WebSocket server
 wsServer = new ImageWebSocketServer(server);
 
-// Start server and configure ViteExpress
+// Configure ViteExpress before starting server
+ViteExpress.config({ 
+  mode: env.NODE_ENV,
+});
+
+// Bind ViteExpress to the app and server
+ViteExpress.bind(app, server);
+
+// Start server
 server.listen(env.PORT, () => {
   console.log(`Server is listening on port ${env.PORT}...`);
   console.log("WebSocket server initialized on /ws");
-  
-  // Configure ViteExpress to use the existing server
-  ViteExpress.config({ mode: env.NODE_ENV });
-  ViteExpress.bind(app, server);
 });
