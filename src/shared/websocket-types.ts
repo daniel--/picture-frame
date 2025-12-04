@@ -7,7 +7,8 @@ export type WebSocketMessage =
   | { type: "images"; images: Image[] }
   | { type: "error"; message: string }
   | { type: "reorder"; imageOrders: Array<{ id: number; displayOrder: number }> }
-  | { type: "slideshow-state"; currentImageId: number | null; isPlaying: boolean }
+  | { type: "slideshow-current-image"; currentImageId: number | null }
+  | { type: "slideshow-is-playing"; isPlaying: boolean }
   | { type: "slideshow-next" }
   | { type: "slideshow-previous" }
   | { type: "slideshow-play" }

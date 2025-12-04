@@ -81,7 +81,7 @@ export function Admin() {
         </div>
       </main>
       <SlideshowControls
-        isPlaying={slideshow.state.isPlaying}
+        isPlaying={slideshow.isPlaying}
         onPrevious={slideshow.previous}
         onNext={slideshow.next}
         onPlay={slideshow.play}

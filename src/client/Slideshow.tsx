@@ -15,7 +15,7 @@ function Slideshow() {
     transitionDirection,
     localImages,
     getImageById,
-  } = useImageTransition(slideshow.images, slideshow.state.currentImageId);
+  } = useImageTransition(slideshow.images, slideshow.currentImageId);
 
   // Compute current image from local state
   const localCurrentImage = localCurrentImageId
@@ -58,7 +58,7 @@ function Slideshow() {
         case "p":
         case "P":
           event.preventDefault();
-          if (slideshow.state.isPlaying) {
+          if (slideshow.isPlaying) {
             slideshow.pause();
           } else {
             slideshow.play();
@@ -83,7 +83,7 @@ function Slideshow() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [slideshow.state.isPlaying, slideshow.play, slideshow.pause, handleNext, handlePrevious]);
+  }, [slideshow.isPlaying, slideshow.play, slideshow.pause, handleNext, handlePrevious]);
 
   const bind = useDrag(({ swipe: [swipeX] }) => {
     if (swipeX > 0) {

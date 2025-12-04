@@ -44,8 +44,11 @@ export class ImageWebSocketServer {
         const images = await getAllImages();
         this.sendToClient(ws, { type: "images", images });
         this.sendToClient(ws, {
-          type: "slideshow-state",
+          type: "slideshow-current-image",
           currentImageId: this.slideshowState.currentImageId,
+        });
+        this.sendToClient(ws, {
+          type: "slideshow-is-playing",
           isPlaying: this.slideshowState.isPlaying,
         });
         // Send current slideshow speed
@@ -184,7 +187,7 @@ export class ImageWebSocketServer {
         this.slideshowState.currentImageId = images[0].id;
       }
       await this.saveSlideshowState();
-      this.broadcastSlideshowState();
+      this.broadcastCurrentImage();
     }
   }
 
@@ -207,7 +210,7 @@ export class ImageWebSocketServer {
         this.slideshowState.currentImageId = images[images.length - 1].id;
       }
       await this.saveSlideshowState();
-      this.broadcastSlideshowState();
+      this.broadcastCurrentImage();
     }
   }
 
@@ -219,11 +222,12 @@ export class ImageWebSocketServer {
     // If no current image set, start at first image
     if (!this.slideshowState.currentImageId && images.length > 0) {
       this.slideshowState.currentImageId = images[0].id;
+      this.broadcastCurrentImage();
     }
     this.slideshowState.isPlaying = true;
     this.startAutoPlay();
     await this.saveSlideshowState();
-    this.broadcastSlideshowState();
+    this.broadcastIsPlaying();
   }
 
   /**
@@ -233,7 +237,7 @@ export class ImageWebSocketServer {
     this.slideshowState.isPlaying = false;
     this.stopAutoPlay();
     await this.saveSlideshowState();
-    this.broadcastSlideshowState();
+    this.broadcastIsPlaying();
   }
 
   /**
@@ -245,7 +249,7 @@ export class ImageWebSocketServer {
     if (images.some(img => img.id === imageId)) {
       this.slideshowState.currentImageId = imageId;
       await this.saveSlideshowState();
-      this.broadcastSlideshowState();
+      this.broadcastCurrentImage();
     }
   }
 
@@ -343,7 +347,7 @@ export class ImageWebSocketServer {
         }
       }
       await this.saveSlideshowState();
-      this.broadcastSlideshowState();
+      this.broadcastCurrentImage();
     }, this.slideDuration);
   }
 
@@ -393,19 +397,35 @@ export class ImageWebSocketServer {
       });
       
       // Also broadcast updated slideshow state
-      this.broadcastSlideshowState();
+      this.broadcastCurrentImage();
+      this.broadcastIsPlaying();
     } catch (error) {
       console.error("Error broadcasting images:", error);
     }
   }
 
   /**
-   * Broadcasts the current slideshow state to all authenticated clients
+   * Broadcasts the current image to all authenticated clients
    */
-  private broadcastSlideshowState(): void {
+  private broadcastCurrentImage(): void {
     const message = JSON.stringify({
-      type: "slideshow-state",
+      type: "slideshow-current-image",
       currentImageId: this.slideshowState.currentImageId,
+    });
+    
+    this.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(message);
+      }
+    });
+  }
+
+  /**
+   * Broadcasts the playing state to all authenticated clients
+   */
+  private broadcastIsPlaying(): void {
+    const message = JSON.stringify({
+      type: "slideshow-is-playing",
       isPlaying: this.slideshowState.isPlaying,
     });
     

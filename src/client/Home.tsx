@@ -39,7 +39,7 @@ export function Home() {
         />
       </main>
       <SlideshowControls
-        isPlaying={slideshow.state.isPlaying}
+        isPlaying={slideshow.isPlaying}
         onPrevious={slideshow.previous}
         onNext={slideshow.next}
         onPlay={slideshow.play}

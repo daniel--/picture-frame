@@ -6,10 +6,8 @@ import { WebSocketMessage } from "../../shared/websocket-types.js";
 
 export function useSlideShow() {
   const [images, setImages] = useState<Image[]>([]);
-  const [state, setState] = useState<{ currentImageId: number | null; isPlaying: boolean }>({
-    currentImageId: null,
-    isPlaying: false,
-  });
+  const [currentImageId, setCurrentImageId] = useState<number | null>(null);
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [speed, setSpeed] = useState<number | null>(null);
   const [randomOrder, setRandomOrder] = useState<boolean | null>(null);
 
@@ -39,11 +37,10 @@ export function useSlideShow() {
         
         if (message.type === "images") {
           setImages(message.images);
-        } else if (message.type === "slideshow-state") {
-          setState({
-            currentImageId: message.currentImageId,
-            isPlaying: message.isPlaying,
-          });
+        } else if (message.type === "slideshow-current-image") {
+          setCurrentImageId(message.currentImageId);
+        } else if (message.type === "slideshow-is-playing") {
+          setIsPlaying(message.isPlaying);
         } else if (message.type === "slideshow-speed") {
           setSpeed(message.speedSeconds);
         } else if (message.type === "slideshow-random-order") {
@@ -111,8 +108,8 @@ export function useSlideShow() {
   // ReadyState: 0 = CONNECTING, 1 = OPEN, 2 = CLOSING, 3 = CLOSED
   const connected = readyState === 1;
 
-  const currentImage = state.currentImageId
-    ? images.find(img => img.id === state.currentImageId) || null
+  const currentImage = currentImageId
+    ? images.find(img => img.id === currentImageId) || null
     : images.length > 0
     ? images[0] // Default to first image if no current image set
     : null;
@@ -120,9 +117,12 @@ export function useSlideShow() {
   return {
     images,
     currentImage,
+    currentImageId,
+    isPlaying,
     connected,
+    speed,
+    randomOrder,
     reorderImages,
-    state,
     next,
     previous,
     play,
@@ -130,8 +130,6 @@ export function useSlideShow() {
     goto,
     deleteImage,
     updateSpeed,
-    speed,
-    randomOrder,
     updateRandomOrder,
   };
 }
