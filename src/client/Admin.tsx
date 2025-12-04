@@ -7,14 +7,14 @@ import { useUserForm } from "./hooks/useUserForm";
 
 export function Admin() {
   const { user, logoutAndRedirect } = useAuth();
-  const { connected, images, slideshowState, slideshowNext, slideshowPrevious, slideshowPlay, slideshowPause, updateSlideshowSpeed, slideshowSpeed, randomOrder, updateRandomOrder } = useSlideShow();
+  const slideshow = useSlideShow();
   const { formData, setFormData, error, success, isSubmitting, handleSubmit } = useUserForm();
 
   return (
     <div className="settings-container">
       <Header
         userName={user?.name ?? null}
-        connected={connected}
+        connected={slideshow.connected}
         onLogout={logoutAndRedirect}
       />
       <main className="settings-main">
@@ -81,16 +81,16 @@ export function Admin() {
         </div>
       </main>
       <SlideshowControls
-        isPlaying={slideshowState.isPlaying}
-        onPrevious={slideshowPrevious}
-        onNext={slideshowNext}
-        onPlay={slideshowPlay}
-        onPause={slideshowPause}
-        randomOrder={randomOrder}
-        onToggleShuffle={(randomOrder !== null) ? () => updateRandomOrder(!randomOrder) : undefined}
-        slideshowSpeed={slideshowSpeed}
-        onSpeedChange={updateSlideshowSpeed}
-        disabled={images.length === 0}
+        isPlaying={slideshow.state.isPlaying}
+        onPrevious={slideshow.previous}
+        onNext={slideshow.next}
+        onPlay={slideshow.play}
+        onPause={slideshow.pause}
+        randomOrder={slideshow.randomOrder}
+        onToggleShuffle={(slideshow.randomOrder !== null) ? () => slideshow.updateRandomOrder(!slideshow.randomOrder) : undefined}
+        slideshowSpeed={slideshow.speed}
+        onSpeedChange={slideshow.updateSpeed}
+        disabled={slideshow.images.length === 0}
       />
     </div>
   );

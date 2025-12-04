@@ -6,11 +6,11 @@ import { WebSocketMessage } from "../../shared/websocket-types.js";
 
 export function useSlideShow() {
   const [images, setImages] = useState<Image[]>([]);
-  const [slideshowState, setSlideshowState] = useState<{ currentImageId: number | null; isPlaying: boolean }>({
+  const [state, setState] = useState<{ currentImageId: number | null; isPlaying: boolean }>({
     currentImageId: null,
     isPlaying: false,
   });
-  const [slideshowSpeed, setSlideshowSpeed] = useState<number | null>(null);
+  const [speed, setSpeed] = useState<number | null>(null);
   const [randomOrder, setRandomOrder] = useState<boolean | null>(null);
 
   // Determine WebSocket URL
@@ -40,12 +40,12 @@ export function useSlideShow() {
         if (message.type === "images") {
           setImages(message.images);
         } else if (message.type === "slideshow-state") {
-          setSlideshowState({
+          setState({
             currentImageId: message.currentImageId,
             isPlaying: message.isPlaying,
           });
         } else if (message.type === "slideshow-speed") {
-          setSlideshowSpeed(message.speedSeconds);
+          setSpeed(message.speedSeconds);
         } else if (message.type === "slideshow-random-order") {
           setRandomOrder(message.randomOrder);
         } else if (message.type === "error") {
@@ -69,27 +69,27 @@ export function useSlideShow() {
     });
   }, [sendJsonMessage]);
 
-  const slideshowNext = useCallback(() => {
+  const next = useCallback(() => {
     sendJsonMessage({ type: "slideshow-next" });
   }, [sendJsonMessage]);
 
-  const slideshowPrevious = useCallback(() => {
+  const previous = useCallback(() => {
     sendJsonMessage({ type: "slideshow-previous" });
   }, [sendJsonMessage]);
 
-  const slideshowPlay = useCallback(() => {
+  const play = useCallback(() => {
     sendJsonMessage({ type: "slideshow-play" });
   }, [sendJsonMessage]);
 
-  const slideshowPause = useCallback(() => {
+  const pause = useCallback(() => {
     sendJsonMessage({ type: "slideshow-pause" });
   }, [sendJsonMessage]);
 
-  const slideshowGoto = useCallback((imageId: number) => {
+  const goto = useCallback((imageId: number) => {
     sendJsonMessage({ type: "slideshow-goto", imageId });
   }, [sendJsonMessage]);
 
-  const updateSlideshowSpeed = useCallback((speedSeconds: number) => {
+  const updateSpeed = useCallback((speedSeconds: number) => {
     sendJsonMessage({ type: "slideshow-speed", speedSeconds });
   }, [sendJsonMessage]);
 
@@ -111,8 +111,8 @@ export function useSlideShow() {
   // ReadyState: 0 = CONNECTING, 1 = OPEN, 2 = CLOSING, 3 = CLOSED
   const connected = readyState === 1;
 
-  const currentImage = slideshowState.currentImageId
-    ? images.find(img => img.id === slideshowState.currentImageId) || null
+  const currentImage = state.currentImageId
+    ? images.find(img => img.id === state.currentImageId) || null
     : images.length > 0
     ? images[0] // Default to first image if no current image set
     : null;
@@ -122,15 +122,15 @@ export function useSlideShow() {
     currentImage,
     connected,
     reorderImages,
-    slideshowState,
-    slideshowNext,
-    slideshowPrevious,
-    slideshowPlay,
-    slideshowPause,
-    slideshowGoto,
+    state,
+    next,
+    previous,
+    play,
+    pause,
+    goto,
     deleteImage,
-    updateSlideshowSpeed,
-    slideshowSpeed,
+    updateSpeed,
+    speed,
     randomOrder,
     updateRandomOrder,
   };

@@ -6,14 +6,7 @@ import "./App.css";
 import "./Slideshow.css";
 
 function Slideshow() {
-  const {
-    images,
-    slideshowState,
-    slideshowNext,
-    slideshowPrevious,
-    slideshowPlay,
-    slideshowPause,
-  } = useSlideShow();
+  const slideshow = useSlideShow();
 
   const {
     localCurrentImageId,
@@ -22,7 +15,7 @@ function Slideshow() {
     transitionDirection,
     localImages,
     getImageById,
-  } = useImageTransition(images, slideshowState.currentImageId);
+  } = useImageTransition(slideshow.images, slideshow.state.currentImageId);
 
   // Compute current image from local state
   const localCurrentImage = localCurrentImageId
@@ -38,11 +31,11 @@ function Slideshow() {
     if (localImages.length === 0 || isTransitioning) return;
     
     if (direction === 'left') {
-      slideshowNext();
+      slideshow.next();
     } else {
-      slideshowPrevious();
+      slideshow.previous();
     }
-  }, [localImages.length, isTransitioning, slideshowNext, slideshowPrevious]);
+  }, [localImages.length, isTransitioning, slideshow.next, slideshow.previous]);
 
   // Convenience functions for backward compatibility
   const handleNext = useCallback(() => handleNavigation('left'), [handleNavigation]);
@@ -65,10 +58,10 @@ function Slideshow() {
         case "p":
         case "P":
           event.preventDefault();
-          if (slideshowState.isPlaying) {
-            slideshowPause();
+          if (slideshow.state.isPlaying) {
+            slideshow.pause();
           } else {
-            slideshowPlay();
+            slideshow.play();
           }
           break;
         case "ArrowRight":
@@ -90,7 +83,7 @@ function Slideshow() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [slideshowState.isPlaying, slideshowPlay, slideshowPause, handleNext, handlePrevious]);
+  }, [slideshow.state.isPlaying, slideshow.play, slideshow.pause, handleNext, handlePrevious]);
 
   const bind = useDrag(({ swipe: [swipeX] }) => {
     if (swipeX > 0) {

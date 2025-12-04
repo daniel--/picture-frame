@@ -10,44 +10,45 @@ export function Home() {
   const { user, logoutAndRedirect } = useAuth();
   const { isProcessing } = useShareTarget();
 
-  const { images, reorderImages, currentImage, slideshowState, slideshowNext, slideshowPrevious, slideshowPlay, slideshowPause, slideshowGoto, deleteImage, connected, updateRandomOrder, randomOrder, slideshowSpeed, updateSlideshowSpeed } = useSlideShow();
+  
+  const slideshow = useSlideShow();
 
   const handleToggleShuffle = () => {
-    const isRandomOrderEnabled = randomOrder !== null ? randomOrder : false;
-    updateRandomOrder(!isRandomOrderEnabled);
+    const isRandomOrderEnabled = slideshow.randomOrder !== null ? slideshow.randomOrder : false;
+    slideshow.updateRandomOrder(!isRandomOrderEnabled);
   };
 
   const handleSpeedChange = (newSpeed: number) => {
-    updateSlideshowSpeed(newSpeed);
+    slideshow.updateSpeed(newSpeed);
   };
 
   return (
     <div className="home-container">
       <Header
         userName={user?.name ?? null}
-        connected={connected}
+        connected={slideshow.connected}
         onLogout={logoutAndRedirect}
       />
       <main className="home-main">
         <ImageGrid
-          images={images}
-          currentImageId={currentImage?.id ?? null}
-          onReorder={reorderImages}
-          onSelectImage={slideshowGoto}
-          onDeleteImage={deleteImage}
+          images={slideshow.images}
+          currentImageId={slideshow.currentImage?.id ?? null}
+          onReorder={slideshow.reorderImages}
+          onSelectImage={slideshow.goto}
+          onDeleteImage={slideshow.deleteImage}
         />
       </main>
       <SlideshowControls
-        isPlaying={slideshowState.isPlaying}
-        onPrevious={slideshowPrevious}
-        onNext={slideshowNext}
-        onPlay={slideshowPlay}
-        onPause={slideshowPause}
-        randomOrder={randomOrder}
+        isPlaying={slideshow.state.isPlaying}
+        onPrevious={slideshow.previous}
+        onNext={slideshow.next}
+        onPlay={slideshow.play}
+        onPause={slideshow.pause}
+        randomOrder={slideshow.randomOrder}
         onToggleShuffle={handleToggleShuffle}
-        slideshowSpeed={slideshowSpeed}
+        slideshowSpeed={slideshow.speed}
         onSpeedChange={handleSpeedChange}
-        disabled={images.length === 0}
+        disabled={slideshow.images.length === 0}
       />
     </div>
   );
