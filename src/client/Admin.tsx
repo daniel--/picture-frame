@@ -4,6 +4,7 @@ import { Header } from "./components/Header";
 import { useSlideShow } from "./hooks/useSlideShow";
 import { SlideshowControls } from "./components/SlideshowControls";
 import { useUserForm } from "./hooks/useUserForm";
+import { GIT_HASH, BUILD_TIME } from "./version";
 
 export function Admin() {
   const { user, logoutAndRedirect } = useAuth();
@@ -77,6 +78,19 @@ export function Admin() {
                 {isSubmitting ? "Creating..." : "Create User"}
               </button>
             </form>
+          </div>
+          
+          <div className="settings-version-info">
+            <div className="settings-version-item">
+              <span className="settings-version-label">Version:</span>
+              <code className="settings-version-value">{GIT_HASH}</code>
+            </div>
+            <div className="settings-version-item">
+              <span className="settings-version-label">Built:</span>
+              <span className="settings-version-value">
+                {new Date(BUILD_TIME).toLocaleString()}
+              </span>
+            </div>
           </div>
         </div>
       </main>

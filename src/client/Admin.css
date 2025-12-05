@@ -185,6 +185,38 @@
   line-height: 1.5;
 }
 
+/* Version Info Styles */
+.settings-version-info {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--color-border-light);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.settings-version-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+}
+
+.settings-version-label {
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  min-width: 60px;
+}
+
+.settings-version-value {
+  color: var(--color-text-primary);
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  background-color: var(--color-bg-disabled);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8125rem;
+}
+
 /* User Creation Form Styles */
 .settings-user-form {
   display: flex;
