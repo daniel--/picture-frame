@@ -27,6 +27,22 @@ export class ImageWebSocketServer {
   private slideDuration = 5000; // 5 seconds per slide (will be loaded from DB)
   private randomOrder = false; // Random order setting (will be loaded from DB)
 
+  /**
+   * Map of message types to their handler functions
+   */
+  private messageHandlers: {
+    [K in WebSocketMessage['type']]?: (ws: ClientWebSocket, message: Extract<WebSocketMessage, { type: K }>) => Promise<void>
+  } = {
+    'reorder': async (ws, message) => await this.handleReorderMessage(ws, message),
+    'slideshow-next': async () => await this.handleSlideshowNext(),
+    'slideshow-previous': async () => await this.handleSlideshowPrevious(),
+    'slideshow-play': async () => await this.handleSlideshowPlay(),
+    'slideshow-pause': async () => await this.handleSlideshowPause(),
+    'slideshow-goto': async (ws, message) => await this.handleSlideshowGoto(message.imageId),
+    'slideshow-speed': async (ws, message) => await this.handleSlideshowSpeed(message.speedSeconds),
+    'slideshow-random-order': async (ws, message) => await this.handleSlideshowRandomOrder(message.randomOrder),
+  };
+
   constructor(server: any) {
     this.wss = new WebSocketServer({ server, path: "/ws" });
     
@@ -121,31 +137,12 @@ export class ImageWebSocketServer {
    * Main message handler that delegates to specific handlers
    */
   private async handleMessage(ws: ClientWebSocket, message: WebSocketMessage): Promise<void> {
-    switch (message.type) {
-      case "reorder":
-        await this.handleReorderMessage(ws, message);
-        break;
-      case "slideshow-next":
-        await this.handleSlideshowNext();
-        break;
-      case "slideshow-previous":
-        await this.handleSlideshowPrevious();
-        break;
-      case "slideshow-play":
-        await this.handleSlideshowPlay();
-        break;
-      case "slideshow-pause":
-        await this.handleSlideshowPause();
-        break;
-      case "slideshow-goto":
-        await this.handleSlideshowGoto(message.imageId);
-        break;
-      case "slideshow-speed":
-        await this.handleSlideshowSpeed(message.speedSeconds);
-        break;
-      case "slideshow-random-order":
-        await this.handleSlideshowRandomOrder(message.randomOrder);
-        break;
+    const handler = this.messageHandlers[message.type];
+    
+    if (handler) {
+      await handler(ws, message as any);
+    } else {
+      console.warn(`No handler registered for message type: ${message.type}`);
     }
   }
 
@@ -169,49 +166,62 @@ export class ImageWebSocketServer {
   }
 
   /**
-   * Handles slideshow next requests
+   * Navigates to a specific image or direction in the slideshow
+   * @param target Either 'next', 'previous', or a specific image ID
    */
-  private async handleSlideshowNext(): Promise<void> {
+  private async navigateToImage(target: 'next' | 'previous' | number): Promise<void> {
     const images = await getAllImages();
-    if (images.length > 0) {
+    if (images.length === 0) {
+      return;
+    }
+
+    let newImageId: number | null = null;
+
+    if (typeof target === 'number') {
+      // Navigate to specific image ID
+      if (images.some(img => img.id === target)) {
+        newImageId = target;
+      }
+    } else {
+      // Navigate next or previous
       const currentIndex = this.slideshowState.currentImageId
         ? images.findIndex(img => img.id === this.slideshowState.currentImageId)
         : -1;
       
       if (currentIndex >= 0) {
-        // Move to next image
-        const nextIndex = (currentIndex + 1) % images.length;
-        this.slideshowState.currentImageId = images[nextIndex].id;
-      } else if (images.length > 0) {
-        // If current image not found, start at first image
-        this.slideshowState.currentImageId = images[0].id;
+        // Move to next or previous image
+        const newIndex = target === 'next'
+          ? (currentIndex + 1) % images.length
+          : (currentIndex - 1 + images.length) % images.length;
+        newImageId = images[newIndex].id;
+      } else {
+        // If current image not found, start at first (next) or last (previous) image
+        newImageId = target === 'next'
+          ? images[0].id
+          : images[images.length - 1].id;
       }
+    }
+
+    // Only update if we found a valid image
+    if (newImageId !== null) {
+      this.slideshowState.currentImageId = newImageId;
       await this.saveSlideshowState();
       this.broadcastCurrentImage();
     }
   }
 
   /**
+   * Handles slideshow next requests
+   */
+  private async handleSlideshowNext(): Promise<void> {
+    await this.navigateToImage('next');
+  }
+
+  /**
    * Handles slideshow previous requests
    */
   private async handleSlideshowPrevious(): Promise<void> {
-    const images = await getAllImages();
-    if (images.length > 0) {
-      const currentIndex = this.slideshowState.currentImageId
-        ? images.findIndex(img => img.id === this.slideshowState.currentImageId)
-        : -1;
-      
-      if (currentIndex >= 0) {
-        // Move to previous image
-        const prevIndex = (currentIndex - 1 + images.length) % images.length;
-        this.slideshowState.currentImageId = images[prevIndex].id;
-      } else if (images.length > 0) {
-        // If current image not found, start at last image
-        this.slideshowState.currentImageId = images[images.length - 1].id;
-      }
-      await this.saveSlideshowState();
-      this.broadcastCurrentImage();
-    }
+    await this.navigateToImage('previous');
   }
 
   /**
@@ -244,13 +254,7 @@ export class ImageWebSocketServer {
    * Handles slideshow goto requests
    */
   private async handleSlideshowGoto(imageId: number): Promise<void> {
-    const images = await getAllImages();
-    // Verify the imageId exists in the current image list
-    if (images.some(img => img.id === imageId)) {
-      this.slideshowState.currentImageId = imageId;
-      await this.saveSlideshowState();
-      this.broadcastCurrentImage();
-    }
+    await this.navigateToImage(imageId);
   }
 
   /**
@@ -362,6 +366,19 @@ export class ImageWebSocketServer {
   }
 
   /**
+   * Generic method to broadcast a message to all connected clients
+   */
+  private broadcast(message: WebSocketMessage): void {
+    const messageStr = JSON.stringify(message);
+    
+    this.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(messageStr);
+      }
+    });
+  }
+
+  /**
    * Broadcasts the current image list to all authenticated clients
    */
   async broadcastImages(): Promise<void> {
@@ -388,13 +405,7 @@ export class ImageWebSocketServer {
         await this.saveSlideshowState();
       }
       
-      const message = JSON.stringify({ type: "images", images });
-      
-      this.clients.forEach((client) => {
-        if (client.readyState === WebSocket.OPEN) {
-          client.send(message);
-        }
-      });
+      this.broadcast({ type: "images", images });
       
       // Also broadcast updated slideshow state
       this.broadcastCurrentImage();
@@ -408,15 +419,9 @@ export class ImageWebSocketServer {
    * Broadcasts the current image to all authenticated clients
    */
   private broadcastCurrentImage(): void {
-    const message = JSON.stringify({
+    this.broadcast({
       type: "slideshow-current-image",
       currentImageId: this.slideshowState.currentImageId,
-    });
-    
-    this.clients.forEach((client) => {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(message);
-      }
     });
   }
 
@@ -424,15 +429,9 @@ export class ImageWebSocketServer {
    * Broadcasts the playing state to all authenticated clients
    */
   private broadcastIsPlaying(): void {
-    const message = JSON.stringify({
+    this.broadcast({
       type: "slideshow-is-playing",
       isPlaying: this.slideshowState.isPlaying,
-    });
-    
-    this.clients.forEach((client) => {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(message);
-      }
     });
   }
 
@@ -440,15 +439,9 @@ export class ImageWebSocketServer {
    * Broadcasts the current slideshow speed to all authenticated clients
    */
   private broadcastSlideshowSpeed(): void {
-    const message = JSON.stringify({
+    this.broadcast({
       type: "slideshow-speed",
       speedSeconds: this.slideDuration / 1000,
-    });
-    
-    this.clients.forEach((client) => {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(message);
-      }
     });
   }
 
@@ -456,15 +449,9 @@ export class ImageWebSocketServer {
    * Broadcasts the current random order setting to all authenticated clients
    */
   private broadcastRandomOrder(): void {
-    const message = JSON.stringify({
+    this.broadcast({
       type: "slideshow-random-order",
       randomOrder: this.randomOrder,
-    });
-    
-    this.clients.forEach((client) => {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(message);
-      }
     });
   }
 
