@@ -6,24 +6,24 @@ import { execSync } from "child_process";
 // Get git hash at build time
 // First try environment variable (for Docker builds), then try git command
 function getGitHash() {
-  // Check for build arg from Docker
-  if (process.env.GIT_HASH) {
+  // Check for build arg from Docker (but ignore if it's "unknown")
+  if (process.env.GIT_HASH && process.env.GIT_HASH !== "unknown") {
     return process.env.GIT_HASH;
   }
   try {
-    return execSync("git rev-parse HEAD").toString().trim();
+    return execSync("git rev-parse HEAD", { encoding: "utf-8" }).toString().trim();
   } catch (e) {
     return "unknown";
   }
 }
 
 function getGitShortHash() {
-  // Check for build arg from Docker
-  if (process.env.GIT_HASH) {
+  // Check for build arg from Docker (but ignore if it's "unknown")
+  if (process.env.GIT_HASH && process.env.GIT_HASH !== "unknown") {
     return process.env.GIT_HASH.substring(0, 7);
   }
   try {
-    return execSync("git rev-parse --short HEAD").toString().trim();
+    return execSync("git rev-parse --short HEAD", { encoding: "utf-8" }).toString().trim();
   } catch (e) {
     return "unknown";
   }
