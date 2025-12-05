@@ -18,8 +18,19 @@ export default defineConfig({
       strategies: "injectManifest",
       srcDir: "src",
       filename: "sw.ts",
+      injectRegister: null, // We'll register manually with workbox-window
       injectManifest: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+      },
+      // Ensure service worker updates are checked frequently
+      workbox: {
+        cleanupOutdatedCaches: true,
+        sourcemap: false,
+      },
+      // Development options
+      devOptions: {
+        enabled: false, // Set to true if you want PWA in dev mode
+        type: "module",
       },
       includeAssets: ["favicon.ico", "apple-touch-icon.png"],
       manifest: {

@@ -17,6 +17,21 @@ const app = express();
 // Middleware for parsing JSON request bodies
 app.use(express.json());
 
+// Cache control middleware for service worker and PWA files
+app.use((req, res, next) => {
+  // Don't cache service worker, manifest, or registerSW to ensure updates are fetched
+  if (
+    req.url === "/sw.js" ||
+    req.url === "/manifest.webmanifest" ||
+    req.url === "/registerSW.js"
+  ) {
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+  }
+  next();
+});
+
 // Serve uploaded images statically
 app.use("/uploads", express.static(path.join(process.cwd(), "public", "uploads")));
 

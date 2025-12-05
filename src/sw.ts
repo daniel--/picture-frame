@@ -5,6 +5,9 @@ import { NavigationRoute, registerRoute } from "workbox-routing";
 
 declare const self: ServiceWorkerGlobalScope;
 
+// Skip waiting to activate new service worker immediately
+self.skipWaiting();
+
 // Take control of all clients immediately
 clientsClaim();
 
