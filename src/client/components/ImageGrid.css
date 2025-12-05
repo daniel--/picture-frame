@@ -69,6 +69,25 @@
   transform-origin: center;
 }
 
+/* On mobile (by viewport width), hide buttons by default and show when active */
+/* This takes precedence over hover-based rules to fix Chrome mobile */
+@media (max-width: 768px) {
+  .grid-image-select-button,
+  .grid-image-delete-button,
+  .grid-image-drag-handle {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .sortable-image-container.active .grid-image-select-button,
+  .sortable-image-container.active .grid-image-delete-button,
+  .sortable-image-container.active .grid-image-drag-handle {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
 /* Hide buttons by default on desktop, show on hover */
 @media (hover: hover) and (pointer: fine) {
   .grid-image-select-button,
@@ -85,6 +104,7 @@
 }
 
 /* On mobile (touch devices), hide buttons by default and show when active */
+/* Fallback for devices that match touch but not viewport width */
 @media (hover: none) and (pointer: coarse) {
   .grid-image-select-button,
   .grid-image-delete-button,
