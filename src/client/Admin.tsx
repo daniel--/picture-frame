@@ -21,18 +21,12 @@ export function Admin() {
       <main className="settings-main">
         <div className="settings-content">
           <h2 className="settings-title">Admin</h2>
-          
+
           <div className="settings-section">
-            <label className="settings-label">
-              Create New User
-            </label>
+            <label className="settings-label">Create New User</label>
             <form onSubmit={handleSubmit} className="settings-user-form">
-              {error && (
-                <div className="settings-form-error">{error}</div>
-              )}
-              {success && (
-                <div className="settings-form-success">{success}</div>
-              )}
+              {error && <div className="settings-form-error">{error}</div>}
+              {success && <div className="settings-form-success">{success}</div>}
               <div className="settings-form-group">
                 <label htmlFor="user-name">Name</label>
                 <input
@@ -70,16 +64,12 @@ export function Admin() {
                   disabled={isSubmitting}
                 />
               </div>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="settings-form-submit"
-              >
+              <button type="submit" disabled={isSubmitting} className="settings-form-submit">
                 {isSubmitting ? "Creating..." : "Create User"}
               </button>
             </form>
           </div>
-          
+
           <div className="settings-version-info">
             <div className="settings-version-item">
               <span className="settings-version-label">Version:</span>
@@ -101,7 +91,11 @@ export function Admin() {
         onPlay={slideshow.play}
         onPause={slideshow.pause}
         randomOrder={slideshow.randomOrder}
-        onToggleShuffle={(slideshow.randomOrder !== null) ? () => slideshow.updateRandomOrder(!slideshow.randomOrder) : undefined}
+        onToggleShuffle={
+          slideshow.randomOrder !== null
+            ? () => slideshow.updateRandomOrder(!slideshow.randomOrder)
+            : undefined
+        }
         slideshowSpeed={slideshow.speed}
         onSpeedChange={slideshow.updateSpeed}
         disabled={slideshow.images.length === 0}
@@ -109,4 +103,3 @@ export function Admin() {
     </div>
   );
 }
-

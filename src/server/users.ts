@@ -83,11 +83,7 @@ export async function login(input: LoginInput): Promise<Omit<User, "password">> 
   }
 
   // Find user by email
-  const [user] = await db
-    .select()
-    .from(usersTable)
-    .where(eq(usersTable.email, email))
-    .limit(1);
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
 
   if (!user) {
     throw new AppError("Invalid email or password", ErrorType.UNAUTHORIZED);
@@ -109,4 +105,3 @@ export async function login(input: LoginInput): Promise<Omit<User, "password">> 
     updatedAt: user.updatedAt,
   };
 }
-

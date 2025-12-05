@@ -3,4 +3,3 @@ export interface IconProps {
   height?: number | string;
   className?: string;
 }
-

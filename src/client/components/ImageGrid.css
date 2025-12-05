@@ -39,10 +39,11 @@
 }
 
 .grid-image-current {
-  box-shadow: 0 0 20px rgba(118, 89, 151, 0.6),
-              0 0 40px rgba(118, 89, 151, 0.4),
-              0 0 60px rgba(118, 89, 151, 0.2),
-              var(--shadow-primary-light);
+  box-shadow:
+    0 0 20px rgba(118, 89, 151, 0.6),
+    0 0 40px rgba(118, 89, 151, 0.4),
+    0 0 60px rgba(118, 89, 151, 0.2),
+    var(--shadow-primary-light);
   border: 2px solid var(--color-primary);
   position: relative;
   z-index: 1;
@@ -212,4 +213,3 @@
     gap: 0.5rem;
   }
 }
-

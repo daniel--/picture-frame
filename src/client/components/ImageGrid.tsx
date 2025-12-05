@@ -103,9 +103,9 @@ export function ImageGrid({
         <div className="images-grid">
           <UploadPlaceholder />
           {items.map((image) => (
-            <SortableImage 
-              key={image.id} 
-              image={image} 
+            <SortableImage
+              key={image.id}
+              image={image}
               isCurrent={currentImageId === image.id}
               isActive={activeImageId === image.id}
               onSelect={onSelectImage}
@@ -117,14 +117,9 @@ export function ImageGrid({
       </SortableContext>
       <DragOverlay>
         {activeImage ? (
-          <img
-            src={activeImage.thumbnailPath ?? ""}
-            alt=""
-            className="grid-image"
-          />
+          <img src={activeImage.thumbnailPath ?? ""} alt="" className="grid-image" />
         ) : null}
       </DragOverlay>
     </DndContext>
   );
 }
-

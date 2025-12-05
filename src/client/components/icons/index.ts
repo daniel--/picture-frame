@@ -8,4 +8,3 @@ export { StarIcon } from "./StarIcon.js";
 export { DragHandleIcon } from "./DragHandleIcon.js";
 export { ClockIcon } from "./ClockIcon.js";
 export type { IconProps } from "./types.js";
-

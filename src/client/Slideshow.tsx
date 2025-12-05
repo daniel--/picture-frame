@@ -21,25 +21,28 @@ function Slideshow() {
   const localCurrentImage = localCurrentImageId
     ? getImageById(localCurrentImageId)
     : localImages.length > 0
-    ? localImages[0]
-    : null;
+      ? localImages[0]
+      : null;
 
   const previousImage = getImageById(previousImageId);
 
   // Navigation handler - relies on server to update state and trigger transition
-  const handleNavigation = useCallback((direction: 'left' | 'right') => {
-    if (localImages.length === 0 || isTransitioning) return;
-    
-    if (direction === 'left') {
-      slideshow.next();
-    } else {
-      slideshow.previous();
-    }
-  }, [localImages.length, isTransitioning, slideshow.next, slideshow.previous]);
+  const handleNavigation = useCallback(
+    (direction: "left" | "right") => {
+      if (localImages.length === 0 || isTransitioning) return;
+
+      if (direction === "left") {
+        slideshow.next();
+      } else {
+        slideshow.previous();
+      }
+    },
+    [localImages.length, isTransitioning, slideshow.next, slideshow.previous]
+  );
 
   // Convenience functions for backward compatibility
-  const handleNext = useCallback(() => handleNavigation('left'), [handleNavigation]);
-  const handlePrevious = useCallback(() => handleNavigation('right'), [handleNavigation]);
+  const handleNext = useCallback(() => handleNavigation("left"), [handleNavigation]);
+  const handlePrevious = useCallback(() => handleNavigation("right"), [handleNavigation]);
 
   // Keyboard controls
   useEffect(() => {
@@ -95,17 +98,24 @@ function Slideshow() {
 
   if (localImages.length === 0) {
     return (
-      <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "var(--color-bg-black)" }}>
-        <div style={{ color: "var(--color-text-white)", fontSize: "1.2rem" }}>No images available</div>
+      <div
+        style={{
+          height: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "var(--color-bg-black)",
+        }}
+      >
+        <div style={{ color: "var(--color-text-white)", fontSize: "1.2rem" }}>
+          No images available
+        </div>
       </div>
     );
   }
 
   return (
-    <div
-      {...bind()}
-      className="slideshow-container"
-    >
+    <div {...bind()} className="slideshow-container">
       {localCurrentImage ? (
         <>
           {/* Current image (revealed underneath) */}
@@ -115,7 +125,7 @@ function Slideshow() {
               src={localCurrentImage.path}
               alt={localCurrentImage.originalName}
               draggable={false}
-              className={`slideshow-image ${isTransitioning ? 'entering' : 'active'}`}
+              className={`slideshow-image ${isTransitioning ? "entering" : "active"}`}
             />
           </div>
           {/* Previous image (sliding out on top) */}
@@ -139,4 +149,3 @@ function Slideshow() {
 }
 
 export default Slideshow;
-

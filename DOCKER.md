@@ -19,11 +19,13 @@ NODE_ENV=production
 ```
 
 **Important**: Generate a strong random string for `JWT_SECRET`. You can use:
+
 ```bash
 openssl rand -base64 32
 ```
 
 You can copy the example file to get started:
+
 ```bash
 cp .env.production.example .env.production
 # Then edit .env.production and set your JWT_SECRET
@@ -38,6 +40,7 @@ docker-compose up -d
 **Important**: The container loads environment variables from `.env.production` via the `env_file` directive. The `.env` file (if it exists) is excluded from the Docker image for security. All environment variables should be set in `.env.production`.
 
 If you have a `.env` file, it won't affect the container since:
+
 - It's excluded from the Docker image (via `.dockerignore`)
 - The `docker-compose.yml` uses `env_file: .env.production` to load variables
 - Variable substitution has been removed from the compose file
@@ -92,12 +95,12 @@ docker-compose down -v
 
 ## Environment Variables
 
-| Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| `JWT_SECRET` | Secret key for JWT token signing | - | Yes |
-| `DB_FILE_NAME` | Path to SQLite database file | `/data/db/picture-frame.db` | No |
-| `PORT` | Server port | `3000` | No |
-| `NODE_ENV` | Node environment | `production` | No |
+| Variable       | Description                      | Default                     | Required |
+| -------------- | -------------------------------- | --------------------------- | -------- |
+| `JWT_SECRET`   | Secret key for JWT token signing | -                           | Yes      |
+| `DB_FILE_NAME` | Path to SQLite database file     | `/data/db/picture-frame.db` | No       |
+| `PORT`         | Server port                      | `3000`                      | No       |
+| `NODE_ENV`     | Node environment                 | `production`                | No       |
 
 ## Health Check
 
@@ -162,4 +165,3 @@ docker exec -it picture-frame npm run create-user
    - Set up logging aggregation
    - Monitor container health checks
    - Track resource usage
-

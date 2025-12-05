@@ -110,4 +110,3 @@ export const errorHandler = (
     error: "Internal server error",
   });
 };
-

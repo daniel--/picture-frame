@@ -13,4 +13,3 @@ export function ChevronLeftIcon({ width = 24, height = 24, className }: IconProp
     </svg>
   );
 }
-

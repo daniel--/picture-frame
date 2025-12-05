@@ -210,7 +210,8 @@
 
 .settings-version-value {
   color: var(--color-text-primary);
-  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-family:
+    "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
   background-color: var(--color-bg-disabled);
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
@@ -345,4 +346,3 @@
     flex: 1 1 100%;
   }
 }
-

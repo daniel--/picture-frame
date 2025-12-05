@@ -16,11 +16,7 @@ export interface AuthRequest extends Request {
  * After this middleware executes successfully, req.user is guaranteed to exist in route handlers
  * Usage: app.post("/protected-route", authenticateToken, asyncHandler(async (req: AuthRequest, res) => { ... }))
  */
-export const authenticateToken = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
   try {
     // Get token from Authorization header
     const authHeader = req.headers.authorization;
@@ -58,4 +54,3 @@ export const authenticateToken = (
     next(error);
   }
 };
-

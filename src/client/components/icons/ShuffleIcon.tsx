@@ -13,4 +13,3 @@ export function ShuffleIcon({ width = 24, height = 24, className }: IconProps) {
     </svg>
   );
 }
-

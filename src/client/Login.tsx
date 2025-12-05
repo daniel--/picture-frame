@@ -59,7 +59,7 @@ function Login() {
     <div className="App">
       <div className="container">
         <div className="card login-card">
-        <h1>Login</h1>
+          <h1>Login</h1>
           {error && <div className="error-message">{error}</div>}
           <form onSubmit={handleSubmit}>
             <div className="form-group">
@@ -97,4 +97,3 @@ function Login() {
 }
 
 export default Login;
-

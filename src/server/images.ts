@@ -80,11 +80,11 @@ export async function stripMetadata(imagePath: string) {
     const s = sharp(imagePath);
     const { orientation } = await s.metadata();
     const buffer = await s.toBuffer();
-    
+
     // Write to a temporary file first for atomic operation
     const tempPath = `${imagePath}.tmp`;
     await sharp(buffer).withMetadata({ orientation }).toFile(tempPath);
-    
+
     // Atomically replace the original file
     const fs = await import("fs/promises");
     await fs.rename(tempPath, imagePath);
@@ -171,11 +171,7 @@ export async function createImage(input: {
  */
 export async function deleteImage(imageId: number): Promise<Image> {
   // Find the image in the database
-  const [image] = await db
-    .select()
-    .from(imagesTable)
-    .where(eq(imagesTable.id, imageId))
-    .limit(1);
+  const [image] = await db.select().from(imagesTable).where(eq(imagesTable.id, imageId)).limit(1);
 
   if (!image) {
     throw new AppError("Image not found", ErrorType.NOT_FOUND);
@@ -216,10 +212,7 @@ export async function deleteImage(imageId: number): Promise<Image> {
  * @returns Array of all images sorted by displayOrder
  */
 export async function getAllImages(): Promise<Image[]> {
-  return await db
-    .select()
-    .from(imagesTable)
-    .orderBy(asc(imagesTable.displayOrder));
+  return await db.select().from(imagesTable).orderBy(asc(imagesTable.displayOrder));
 }
 
 /**
@@ -241,30 +234,20 @@ export async function updateImageSortOrder(
     // To avoid unique constraint violations, we use a two-phase update:
     // Phase 1: Set all display orders to temporary negative values
     // Phase 2: Set them to their final values
-    
+
     // Phase 1: Set temporary negative values
     let tempOrder = -1;
     for (const { id } of imageOrders) {
-      await tx
-        .update(imagesTable)
-        .set({ displayOrder: tempOrder })
-        .where(eq(imagesTable.id, id));
+      await tx.update(imagesTable).set({ displayOrder: tempOrder }).where(eq(imagesTable.id, id));
       tempOrder--;
     }
 
     // Phase 2: Set final values
     for (const { id, displayOrder } of imageOrders) {
-      await tx
-        .update(imagesTable)
-        .set({ displayOrder })
-        .where(eq(imagesTable.id, id));
+      await tx.update(imagesTable).set({ displayOrder }).where(eq(imagesTable.id, id));
     }
 
     // Return all images in the new order
-    return await tx
-      .select()
-      .from(imagesTable)
-      .orderBy(asc(imagesTable.displayOrder));
+    return await tx.select().from(imagesTable).orderBy(asc(imagesTable.displayOrder));
   });
 }
-

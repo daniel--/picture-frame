@@ -102,7 +102,13 @@ export function useImageTransition(
       setLocalCurrentImageId(newImageId);
       setPreviousImageId(null);
     }
-  }, [currentImageId, localCurrentImageId, getImageIndex, calculateTransitionDirection, startTransition]);
+  }, [
+    currentImageId,
+    localCurrentImageId,
+    getImageIndex,
+    calculateTransitionDirection,
+    startTransition,
+  ]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -139,4 +145,3 @@ export function useImageTransition(
     getImageById,
   };
 }
-

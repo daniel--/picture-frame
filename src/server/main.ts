@@ -7,7 +7,15 @@ import { createServer } from "http";
 import { login, LoginInput, createUser, CreateUserInput } from "./users.js";
 import { AppError, ErrorType, asyncHandler, errorHandler } from "./errors.js";
 import { authenticateToken, AuthRequest } from "./auth.js";
-import { upload, createImage, generateThumbnail, deleteImage, updateImageSortOrder, stripMetadata, toImageDTO } from "./images.js";
+import {
+  upload,
+  createImage,
+  generateThumbnail,
+  deleteImage,
+  updateImageSortOrder,
+  stripMetadata,
+  toImageDTO,
+} from "./images.js";
 import { ImageWebSocketServer } from "./websocket.js";
 import { getRandomOrder, setRandomOrder } from "./settings.js";
 import { env } from "./env.js";
@@ -20,11 +28,7 @@ app.use(express.json());
 // Cache control middleware for service worker and PWA files
 app.use((req, res, next) => {
   // Don't cache service worker, manifest, or registerSW to ensure updates are fetched
-  if (
-    req.url === "/sw.js" ||
-    req.url === "/manifest.webmanifest" ||
-    req.url === "/registerSW.js"
-  ) {
+  if (req.url === "/sw.js" || req.url === "/manifest.webmanifest" || req.url === "/registerSW.js") {
     res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     res.setHeader("Pragma", "no-cache");
     res.setHeader("Expires", "0");
@@ -107,7 +111,13 @@ app.post(
     const originalExt = path.extname(req.file.filename);
     const baseName = path.basename(req.file.filename, originalExt);
     const thumbnailFilename = `thumb-${baseName}.jpg`;
-    const thumbnailPath = path.join(process.cwd(), "public", "uploads", "thumbnails", thumbnailFilename);
+    const thumbnailPath = path.join(
+      process.cwd(),
+      "public",
+      "uploads",
+      "thumbnails",
+      thumbnailFilename
+    );
     const thumbnailUrl = `/uploads/thumbnails/${thumbnailFilename}`;
 
     let thumbnailPathResult: string | null = null;
@@ -180,7 +190,10 @@ app.post(
     // Validate each item in the array
     for (const order of imageOrders) {
       if (typeof order.id !== "number" || typeof order.displayOrder !== "number") {
-        throw new AppError("Each item must have id and displayOrder as numbers", ErrorType.BAD_REQUEST);
+        throw new AppError(
+          "Each item must have id and displayOrder as numbers",
+          ErrorType.BAD_REQUEST
+        );
       }
     }
 
@@ -247,7 +260,7 @@ const server = createServer(app);
 wsServer = new ImageWebSocketServer(server);
 
 // Configure ViteExpress before starting server
-ViteExpress.config({ 
+ViteExpress.config({
   mode: env.NODE_ENV,
 });
 

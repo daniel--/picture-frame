@@ -17,4 +17,3 @@ export function StarIcon({ width = 24, height = 24, className }: IconProps) {
     </svg>
   );
 }
-

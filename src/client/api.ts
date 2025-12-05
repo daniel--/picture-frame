@@ -8,10 +8,7 @@ interface ApiOptions extends Omit<RequestInit, "method" | "body"> {
 /**
  * Wrapper around fetch that automatically handles JSON headers and body stringification
  */
-export async function api<T>(
-  url: string,
-  options: ApiOptions = {}
-): Promise<T> {
+export async function api<T>(url: string, options: ApiOptions = {}): Promise<T> {
   const { body, headers = {}, ...restOptions } = options;
 
   // Prepare headers - automatically set Content-Type for JSON if body is provided
@@ -60,19 +57,18 @@ export async function api<T>(
 
   // Throw error if response is not ok
   if (!response.ok) {
-    throw new ApiError(
-      (data as { error?: string }).error || "Request failed",
-      response.status
-    );
+    throw new ApiError((data as { error?: string }).error || "Request failed", response.status);
   }
 
   return data as T;
 }
 
 export class ApiError extends Error {
-  constructor(message: string, public statusCode: number) {
+  constructor(
+    message: string,
+    public statusCode: number
+  ) {
     super(message);
     this.name = "ApiError";
   }
 }
-

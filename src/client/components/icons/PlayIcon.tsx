@@ -13,4 +13,3 @@ export function PlayIcon({ width = 24, height = 24, className }: IconProps) {
     </svg>
   );
 }
-

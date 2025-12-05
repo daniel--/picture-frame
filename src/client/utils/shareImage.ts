@@ -4,8 +4,8 @@
  */
 export async function shareImage(imageUrl: string, imageName: string): Promise<void> {
   // Convert relative URL to absolute URL
-  const absoluteUrl = imageUrl.startsWith("http") 
-    ? imageUrl 
+  const absoluteUrl = imageUrl.startsWith("http")
+    ? imageUrl
     : `${window.location.origin}${imageUrl}`;
 
   // Check if Web Share API is available and supports files
@@ -68,4 +68,3 @@ async function copyToClipboard(text: string): Promise<void> {
     alert("Failed to share image. Please copy the URL manually.");
   }
 }
-

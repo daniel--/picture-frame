@@ -16,11 +16,7 @@ export function useSlideShow() {
   const host = window.location.host;
   const wsUrl = `${protocol}//${host}/ws`;
 
-  const {
-    sendMessage,
-    lastMessage,
-    readyState,
-  } = useWebSocketHook(wsUrl, {
+  const { sendMessage, lastMessage, readyState } = useWebSocketHook(wsUrl, {
     shouldReconnect: (closeEvent: CloseEvent) => {
       // Reconnect unless it was a normal closure
       return closeEvent.code !== 1000;
@@ -34,7 +30,7 @@ export function useSlideShow() {
     if (lastMessage) {
       try {
         const message: WebSocketMessage = JSON.parse(lastMessage.data);
-        
+
         if (message.type === "images") {
           setImages(message.images);
         } else if (message.type === "slideshow-current-image") {
@@ -55,16 +51,22 @@ export function useSlideShow() {
   }, [lastMessage]);
 
   // Helper to send JSON messages
-  const sendJsonMessage = useCallback((message: object) => {
-    sendMessage(JSON.stringify(message));
-  }, [sendMessage]);
+  const sendJsonMessage = useCallback(
+    (message: object) => {
+      sendMessage(JSON.stringify(message));
+    },
+    [sendMessage]
+  );
 
-  const reorderImages = useCallback((imageOrders: Array<{ id: number; displayOrder: number }>) => {
-    sendJsonMessage({
-      type: "reorder",
-      imageOrders,
-    });
-  }, [sendJsonMessage]);
+  const reorderImages = useCallback(
+    (imageOrders: Array<{ id: number; displayOrder: number }>) => {
+      sendJsonMessage({
+        type: "reorder",
+        imageOrders,
+      });
+    },
+    [sendJsonMessage]
+  );
 
   const next = useCallback(() => {
     sendJsonMessage({ type: "slideshow-next" });
@@ -82,17 +84,26 @@ export function useSlideShow() {
     sendJsonMessage({ type: "slideshow-pause" });
   }, [sendJsonMessage]);
 
-  const goto = useCallback((imageId: number) => {
-    sendJsonMessage({ type: "slideshow-goto", imageId });
-  }, [sendJsonMessage]);
+  const goto = useCallback(
+    (imageId: number) => {
+      sendJsonMessage({ type: "slideshow-goto", imageId });
+    },
+    [sendJsonMessage]
+  );
 
-  const updateSpeed = useCallback((speedSeconds: number) => {
-    sendJsonMessage({ type: "slideshow-speed", speedSeconds });
-  }, [sendJsonMessage]);
+  const updateSpeed = useCallback(
+    (speedSeconds: number) => {
+      sendJsonMessage({ type: "slideshow-speed", speedSeconds });
+    },
+    [sendJsonMessage]
+  );
 
-  const updateRandomOrder = useCallback((randomOrder: boolean) => {
-    sendJsonMessage({ type: "slideshow-random-order", randomOrder });
-  }, [sendJsonMessage]);
+  const updateRandomOrder = useCallback(
+    (randomOrder: boolean) => {
+      sendJsonMessage({ type: "slideshow-random-order", randomOrder });
+    },
+    [sendJsonMessage]
+  );
 
   const deleteImage = useCallback(async (imageId: number) => {
     try {
@@ -109,10 +120,10 @@ export function useSlideShow() {
   const connected = readyState === 1;
 
   const currentImage = currentImageId
-    ? images.find(img => img.id === currentImageId) || null
+    ? images.find((img) => img.id === currentImageId) || null
     : images.length > 0
-    ? images[0] // Default to first image if no current image set
-    : null;
+      ? images[0] // Default to first image if no current image set
+      : null;
 
   return {
     images,
@@ -133,4 +144,3 @@ export function useSlideShow() {
     updateRandomOrder,
   };
 }
-

@@ -74,7 +74,7 @@ async function setSetting(key: string, value: string): Promise<void> {
  */
 export async function getSlideDuration(): Promise<number> {
   const value = await getSetting(SLIDE_DURATION_KEY);
-  
+
   if (value) {
     const duration = parseInt(value, 10);
     // Validate: 1 second to 1 day (86400 seconds)
@@ -119,9 +119,7 @@ export async function getSlideshowState(): Promise<SlideshowState> {
   ]);
 
   const isPlaying = isPlayingValue === "true";
-  const currentImageId = currentImageIdValue
-    ? parseInt(currentImageIdValue, 10)
-    : null;
+  const currentImageId = currentImageIdValue ? parseInt(currentImageIdValue, 10) : null;
 
   // Validate currentImageId (should be positive integer or null)
   const validImageId = currentImageId !== null && currentImageId > 0 ? currentImageId : null;
@@ -163,4 +161,3 @@ export async function setRandomOrder(enabled: boolean): Promise<void> {
   const valueStr = enabled ? "true" : "false";
   await setSetting(SLIDESHOW_RANDOM_ORDER_KEY, valueStr);
 }
-

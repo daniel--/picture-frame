@@ -10,7 +10,6 @@ export function Home() {
   const { user, logoutAndRedirect } = useAuth();
   const { isProcessing } = useShareTarget();
 
-  
   const slideshow = useSlideShow();
 
   const handleToggleShuffle = () => {

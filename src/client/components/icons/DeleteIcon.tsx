@@ -21,4 +21,3 @@ export function DeleteIcon({ width = 24, height = 24, className }: IconProps) {
     </svg>
   );
 }
-

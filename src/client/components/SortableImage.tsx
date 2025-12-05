@@ -14,15 +14,17 @@ interface SortableImageProps {
   onToggleActive: (imageId: number | null) => void;
 }
 
-export function SortableImage({ image, isCurrent, isActive, onSelect, onDelete, onToggleActive }: SortableImageProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: image.id });
+export function SortableImage({
+  image,
+  isCurrent,
+  isActive,
+  onSelect,
+  onDelete,
+  onToggleActive,
+}: SortableImageProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: image.id,
+  });
 
   const isMobile = useIsMobile();
   const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
@@ -85,25 +87,22 @@ export function SortableImage({ image, isCurrent, isActive, onSelect, onDelete, 
   const handleListeners = isMobile ? listeners : {};
 
   return (
-    <div 
-      ref={setNodeRef} 
-      style={style} 
-      {...attributes} 
-      className={`sortable-image-container ${isActive ? 'active' : ''}`}
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      className={`sortable-image-container ${isActive ? "active" : ""}`}
     >
       <img
         src={image.thumbnailPath ?? ""}
         alt=""
-        className={`grid-image ${isCurrent ? 'grid-image-current' : ''}`}
+        className={`grid-image ${isCurrent ? "grid-image-current" : ""}`}
         {...imageListeners}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       />
       {/* Drag handle for mobile */}
-      <div
-        className="grid-image-drag-handle"
-        {...handleListeners}
-      >
+      <div className="grid-image-drag-handle" {...handleListeners}>
         <DragHandleIcon width={20} height={20} />
       </div>
       {onSelect && (
@@ -137,4 +136,3 @@ export function SortableImage({ image, isCurrent, isActive, onSelect, onDelete, 
     </div>
   );
 }
-

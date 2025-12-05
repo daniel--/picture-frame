@@ -223,7 +223,10 @@
     max-height: 0;
     overflow: hidden;
     opacity: 0;
-    transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
+    transition:
+      max-height 0.3s ease,
+      opacity 0.3s ease,
+      padding 0.3s ease;
     flex: none;
     justify-content: flex-start;
   }
@@ -326,4 +329,3 @@
     font-size: 0.75rem;
   }
 }
-

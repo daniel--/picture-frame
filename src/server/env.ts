@@ -46,9 +46,7 @@ export function getEnvConfig(): EnvConfig {
   }
 
   if (errors.length > 0) {
-    throw new Error(
-      `Environment validation failed:\n${errors.map((e) => `  - ${e}`).join("\n")}`
-    );
+    throw new Error(`Environment validation failed:\n${errors.map((e) => `  - ${e}`).join("\n")}`);
   }
 
   return {
@@ -61,4 +59,3 @@ export function getEnvConfig(): EnvConfig {
 
 // Export validated config
 export const env = getEnvConfig();
-

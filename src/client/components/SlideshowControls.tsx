@@ -1,5 +1,12 @@
 import "./SlideshowControls.css";
-import { ChevronLeftIcon, ChevronRightIcon, PlayIcon, PauseIcon, ShuffleIcon, ClockIcon } from "./icons/index.js";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  PlayIcon,
+  PauseIcon,
+  ShuffleIcon,
+  ClockIcon,
+} from "./icons/index.js";
 
 const SPEED_OPTIONS = [
   { value: 5, label: "5s" },
@@ -36,20 +43,20 @@ export function SlideshowControls({
   disabled,
 }: SlideshowControlsProps) {
   const currentSpeed = slideshowSpeed !== null ? slideshowSpeed : 5;
-  const currentSpeedLabel = SPEED_OPTIONS.find(opt => opt.value === currentSpeed)?.label || "5s";
+  const currentSpeedLabel = SPEED_OPTIONS.find((opt) => opt.value === currentSpeed)?.label || "5s";
   return (
     <footer className="home-footer">
       <div className="footer-content">
-        <button 
-          className="footer-btn" 
+        <button
+          className="footer-btn"
           onClick={onPrevious}
           aria-label="Previous"
           disabled={disabled}
         >
           <ChevronLeftIcon className="footer-btn-svg" />
         </button>
-        <button 
-          className="footer-btn footer-btn-play" 
+        <button
+          className="footer-btn footer-btn-play"
           onClick={isPlaying ? onPause : onPlay}
           aria-label={isPlaying ? "Pause" : "Play"}
           disabled={disabled}
@@ -60,29 +67,36 @@ export function SlideshowControls({
             <PlayIcon className="footer-btn-svg" />
           )}
         </button>
-          {onToggleShuffle && (
-            <button 
-              className={`footer-btn footer-btn-shuffle ${randomOrder ? 'active' : ''}`}
-              onClick={onToggleShuffle}
-              aria-label={randomOrder === null ? "Loading shuffle state..." : randomOrder ? "Shuffle On" : "Shuffle Off"}
-              disabled={disabled || randomOrder === null}
-              title={randomOrder === null ? "Loading..." : randomOrder ? "Shuffle enabled" : "Shuffle disabled"}
-            >
-              <ShuffleIcon className="footer-btn-svg" />
-            </button>
-          )}
-        <button 
-          className="footer-btn" 
-          onClick={onNext}
-          aria-label="Next"
-          disabled={disabled}
-        >
+        {onToggleShuffle && (
+          <button
+            className={`footer-btn footer-btn-shuffle ${randomOrder ? "active" : ""}`}
+            onClick={onToggleShuffle}
+            aria-label={
+              randomOrder === null
+                ? "Loading shuffle state..."
+                : randomOrder
+                  ? "Shuffle On"
+                  : "Shuffle Off"
+            }
+            disabled={disabled || randomOrder === null}
+            title={
+              randomOrder === null
+                ? "Loading..."
+                : randomOrder
+                  ? "Shuffle enabled"
+                  : "Shuffle disabled"
+            }
+          >
+            <ShuffleIcon className="footer-btn-svg" />
+          </button>
+        )}
+        <button className="footer-btn" onClick={onNext} aria-label="Next" disabled={disabled}>
           <ChevronRightIcon className="footer-btn-svg" />
         </button>
         {onSpeedChange && (
           <div className="footer-speed-selector">
             <ClockIcon className="footer-speed-icon" />
-            <select 
+            <select
               className="footer-speed-select"
               value={currentSpeed}
               onChange={(e) => onSpeedChange(Number(e.target.value))}
@@ -101,4 +115,3 @@ export function SlideshowControls({
     </footer>
   );
 }
-

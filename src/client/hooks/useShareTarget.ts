@@ -16,7 +16,7 @@ async function clearFromIndexedDB(timestamp: number) {
     const transaction = db.transaction(["sharedFiles"], "readwrite");
     const store = transaction.objectStore("sharedFiles");
     const getAllRequest = store.getAll();
-    
+
     getAllRequest.onsuccess = () => {
       const records = getAllRequest.result;
       records.forEach((record) => {
@@ -54,14 +54,14 @@ export function useShareTarget() {
 
         // Mark that we received a message (so we don't check IndexedDB)
         hasProcessedMessage.current = true;
-        
+
         // Clear from IndexedDB BEFORE processing to prevent race conditions
         await clearFromIndexedDB(event.data.timestamp);
-        
+
         // Mark as processing
         globalProcessedTimestamps.add(event.data.timestamp);
         isProcessingLock.current = true;
-        
+
         // Process files
         await processSharedFiles(event.data.files, event.data.timestamp);
       }
@@ -71,7 +71,7 @@ export function useShareTarget() {
     // Only used if app wasn't open when share happened
     const checkIndexedDB = async () => {
       // Wait longer to ensure message handler has a chance to run first
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       // If we already processed a message, don't check IndexedDB
       if (hasProcessedMessage.current) {
@@ -89,7 +89,7 @@ export function useShareTarget() {
           if (records.length > 0) {
             // Process the most recent share
             const latest = records.sort((a, b) => b.timestamp - a.timestamp)[0];
-            
+
             // Check if we've already processed this share (global check)
             if (globalProcessedTimestamps.has(latest.timestamp)) {
               console.log("Share already processed (IndexedDB check), skipping");
@@ -106,11 +106,11 @@ export function useShareTarget() {
 
             // Clear from IndexedDB BEFORE processing to prevent race conditions
             await clearFromIndexedDB(latest.timestamp);
-            
+
             // Mark as processing
             globalProcessedTimestamps.add(latest.timestamp);
             isProcessingLock.current = true;
-            
+
             // Process files
             await processSharedFiles(latest.files, latest.timestamp);
           }
@@ -120,7 +120,10 @@ export function useShareTarget() {
       }
     };
 
-    const processSharedFiles = async (files: Array<{ name: string; type: string; size: number; data: Uint8Array | number[] }>, timestamp: number) => {
+    const processSharedFiles = async (
+      files: Array<{ name: string; type: string; size: number; data: Uint8Array | number[] }>,
+      timestamp: number
+    ) => {
       if (files.length === 0) {
         isProcessingLock.current = false;
         return;
@@ -141,7 +144,7 @@ export function useShareTarget() {
             console.error("Invalid file data format");
             continue;
           }
-          
+
           // Create a new ArrayBuffer from the Uint8Array to ensure compatibility
           const buffer = new ArrayBuffer(dataArray.byteLength);
           new Uint8Array(buffer).set(dataArray);
@@ -197,4 +200,3 @@ function openIndexedDB(): Promise<IDBDatabase> {
     };
   });
 }
-

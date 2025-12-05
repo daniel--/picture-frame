@@ -11,9 +11,9 @@ function getGitHash() {
     return process.env.GIT_HASH;
   }
   try {
-    return execSync('git rev-parse HEAD').toString().trim();
+    return execSync("git rev-parse HEAD").toString().trim();
   } catch (e) {
-    return 'unknown';
+    return "unknown";
   }
 }
 
@@ -23,23 +23,23 @@ function getGitShortHash() {
     return process.env.GIT_HASH.substring(0, 7);
   }
   try {
-    return execSync('git rev-parse --short HEAD').toString().trim();
+    return execSync("git rev-parse --short HEAD").toString().trim();
   } catch (e) {
-    return 'unknown';
+    return "unknown";
   }
 }
 
 // https://vitejs.dev/config/
 export default defineConfig({
   define: {
-    'import.meta.env.VITE_GIT_HASH': JSON.stringify(getGitShortHash()),
-    'import.meta.env.VITE_GIT_HASH_FULL': JSON.stringify(getGitHash()),
-    'import.meta.env.VITE_BUILD_TIME': JSON.stringify(new Date().toISOString()),
+    "import.meta.env.VITE_GIT_HASH": JSON.stringify(getGitShortHash()),
+    "import.meta.env.VITE_GIT_HASH_FULL": JSON.stringify(getGitHash()),
+    "import.meta.env.VITE_BUILD_TIME": JSON.stringify(new Date().toISOString()),
   },
   server: {
     hmr: {
-      protocol: 'ws',
-      host: 'localhost',
+      protocol: "ws",
+      host: "localhost",
       port: 24678,
     },
   },

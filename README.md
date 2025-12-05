@@ -23,7 +23,7 @@ A modern, web-based digital picture frame application with slideshow controls, i
 
 ### Prerequisites
 
-- Node.js 20+ 
+- Node.js 20+
 - npm or pnpm
 - SQLite3 (bundled with Node.js)
 
@@ -112,7 +112,7 @@ docker-compose exec picture-frame npm run create-user
 
 ### Managing Images
 
-1. **Upload Images**: 
+1. **Upload Images**:
    - Click the upload button or use the Web Share Target API to share images directly to the app
    - Supported formats: JPEG, PNG, WebP, GIF
    - EXIF metadata is automatically stripped for privacy
@@ -144,6 +144,7 @@ docker-compose exec picture-frame npm run create-user
 For running the picture frame on a Raspberry Pi with automatic display scheduling, see [raspbian setup.md](raspbian%20setup.md).
 
 The setup includes:
+
 - Auto-start Chromium in kiosk mode on boot
 - Scheduled display on/off times (8 AM - 10 PM by default)
 - Optimized performance for low-power devices
@@ -177,13 +178,13 @@ picture-frame/
 
 ## 🛠️ Available Scripts
 
-| Script | Description |
-|--------|-------------|
-| `npm run dev` | Start development server with hot reload |
-| `npm run build` | Build optimized production bundle |
-| `npm start` | Start production server |
-| `npm run db:push` | Push database schema changes |
-| `npm run create-user` | Interactive user creation script |
+| Script                | Description                              |
+| --------------------- | ---------------------------------------- |
+| `npm run dev`         | Start development server with hot reload |
+| `npm run build`       | Build optimized production bundle        |
+| `npm start`           | Start production server                  |
+| `npm run db:push`     | Push database schema changes             |
+| `npm run create-user` | Interactive user creation script         |
 
 ## 🔒 Security Features
 
@@ -215,6 +216,7 @@ picture-frame/
 ## 🧪 Technology Stack
 
 ### Frontend
+
 - **React 19** - UI framework
 - **TypeScript** - Type-safe JavaScript
 - **Vite** - Build tool and dev server
@@ -223,6 +225,7 @@ picture-frame/
 - **Workbox** - PWA service worker
 
 ### Backend
+
 - **Express 5** - Web server framework
 - **SQLite** - Lightweight database
 - **Drizzle ORM** - Type-safe database queries
@@ -233,6 +236,7 @@ picture-frame/
 - **Bcrypt** - Password hashing
 
 ### DevOps
+
 - **Docker** - Containerization
 - **Docker Compose** - Multi-container orchestration
 - **Alpine Linux** - Lightweight container base
@@ -241,12 +245,12 @@ picture-frame/
 
 ### Environment Variables
 
-| Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| `JWT_SECRET` | Secret key for JWT signing | - | Yes |
-| `DB_FILE_NAME` | SQLite database file path | `local.sqlite` | No |
-| `PORT` | Server port | `3000` | No |
-| `NODE_ENV` | Environment mode | `development` | No |
+| Variable       | Description                | Default        | Required |
+| -------------- | -------------------------- | -------------- | -------- |
+| `JWT_SECRET`   | Secret key for JWT signing | -              | Yes      |
+| `DB_FILE_NAME` | SQLite database file path  | `local.sqlite` | No       |
+| `PORT`         | Server port                | `3000`         | No       |
+| `NODE_ENV`     | Environment mode           | `development`  | No       |
 
 ## 🤝 Contributing
 
@@ -269,4 +273,3 @@ For issues, questions, or suggestions, please open an issue on GitHub.
 ---
 
 **Enjoy your digital picture frame! 📸**
-

@@ -68,15 +68,15 @@ self.addEventListener("fetch", (event) => {
 
           // Notify only focused/visible clients to prevent duplicates
           // Only send to one client to avoid multiple tabs processing the same share
-          const clients = await self.clients.matchAll({ 
+          const clients = await self.clients.matchAll({
             includeUncontrolled: false,
-            type: "window"
+            type: "window",
           });
-          
+
           // Prefer focused client, otherwise use the first one
-          const focusedClient = clients.find(client => client.focused);
+          const focusedClient = clients.find((client) => client.focused);
           const targetClient = focusedClient || clients[0];
-          
+
           if (targetClient) {
             targetClient.postMessage({
               type: "SHARE_TARGET",
@@ -117,4 +117,3 @@ function openIndexedDB(): Promise<IDBDatabase> {
     };
   });
 }
-

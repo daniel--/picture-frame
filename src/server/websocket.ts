@@ -1,7 +1,14 @@
 import { WebSocketServer, WebSocket } from "ws";
 import { getAllImages, updateImageSortOrder } from "./images.js";
 import { Image } from "./db/schema.js";
-import { getSlideDuration, setSlideDuration, getSlideshowState, setSlideshowState, getRandomOrder, setRandomOrder } from "./settings.js";
+import {
+  getSlideDuration,
+  setSlideDuration,
+  getSlideshowState,
+  setSlideshowState,
+  getRandomOrder,
+  setRandomOrder,
+} from "./settings.js";
 import { WebSocketMessage } from "../shared/websocket-types.js";
 
 interface ClientWebSocket extends WebSocket {
@@ -31,21 +38,25 @@ export class ImageWebSocketServer {
    * Map of message types to their handler functions
    */
   private messageHandlers: {
-    [K in WebSocketMessage['type']]?: (ws: ClientWebSocket, message: Extract<WebSocketMessage, { type: K }>) => Promise<void>
+    [K in WebSocketMessage["type"]]?: (
+      ws: ClientWebSocket,
+      message: Extract<WebSocketMessage, { type: K }>
+    ) => Promise<void>;
   } = {
-    'reorder': async (ws, message) => await this.handleReorderMessage(ws, message),
-    'slideshow-next': async () => await this.handleSlideshowNext(),
-    'slideshow-previous': async () => await this.handleSlideshowPrevious(),
-    'slideshow-play': async () => await this.handleSlideshowPlay(),
-    'slideshow-pause': async () => await this.handleSlideshowPause(),
-    'slideshow-goto': async (ws, message) => await this.handleSlideshowGoto(message.imageId),
-    'slideshow-speed': async (ws, message) => await this.handleSlideshowSpeed(message.speedSeconds),
-    'slideshow-random-order': async (ws, message) => await this.handleSlideshowRandomOrder(message.randomOrder),
+    reorder: async (ws, message) => await this.handleReorderMessage(ws, message),
+    "slideshow-next": async () => await this.handleSlideshowNext(),
+    "slideshow-previous": async () => await this.handleSlideshowPrevious(),
+    "slideshow-play": async () => await this.handleSlideshowPlay(),
+    "slideshow-pause": async () => await this.handleSlideshowPause(),
+    "slideshow-goto": async (ws, message) => await this.handleSlideshowGoto(message.imageId),
+    "slideshow-speed": async (ws, message) => await this.handleSlideshowSpeed(message.speedSeconds),
+    "slideshow-random-order": async (ws, message) =>
+      await this.handleSlideshowRandomOrder(message.randomOrder),
   };
 
   constructor(server: any) {
     this.wss = new WebSocketServer({ server, path: "/ws" });
-    
+
     // Load slide duration, slideshow state, and random order setting from database
     this.initializeSlideDuration();
     this.initializeSlideshowState();
@@ -138,7 +149,7 @@ export class ImageWebSocketServer {
    */
   private async handleMessage(ws: ClientWebSocket, message: WebSocketMessage): Promise<void> {
     const handler = this.messageHandlers[message.type];
-    
+
     if (handler) {
       await handler(ws, message as any);
     } else {
@@ -169,7 +180,7 @@ export class ImageWebSocketServer {
    * Navigates to a specific image or direction in the slideshow
    * @param target Either 'next', 'previous', or a specific image ID
    */
-  private async navigateToImage(target: 'next' | 'previous' | number): Promise<void> {
+  private async navigateToImage(target: "next" | "previous" | number): Promise<void> {
     const images = await getAllImages();
     if (images.length === 0) {
       return;
@@ -177,28 +188,27 @@ export class ImageWebSocketServer {
 
     let newImageId: number | null = null;
 
-    if (typeof target === 'number') {
+    if (typeof target === "number") {
       // Navigate to specific image ID
-      if (images.some(img => img.id === target)) {
+      if (images.some((img) => img.id === target)) {
         newImageId = target;
       }
     } else {
       // Navigate next or previous
       const currentIndex = this.slideshowState.currentImageId
-        ? images.findIndex(img => img.id === this.slideshowState.currentImageId)
+        ? images.findIndex((img) => img.id === this.slideshowState.currentImageId)
         : -1;
-      
+
       if (currentIndex >= 0) {
         // Move to next or previous image
-        const newIndex = target === 'next'
-          ? (currentIndex + 1) % images.length
-          : (currentIndex - 1 + images.length) % images.length;
+        const newIndex =
+          target === "next"
+            ? (currentIndex + 1) % images.length
+            : (currentIndex - 1 + images.length) % images.length;
         newImageId = images[newIndex].id;
       } else {
         // If current image not found, start at first (next) or last (previous) image
-        newImageId = target === 'next'
-          ? images[0].id
-          : images[images.length - 1].id;
+        newImageId = target === "next" ? images[0].id : images[images.length - 1].id;
       }
     }
 
@@ -214,14 +224,14 @@ export class ImageWebSocketServer {
    * Handles slideshow next requests
    */
   private async handleSlideshowNext(): Promise<void> {
-    await this.navigateToImage('next');
+    await this.navigateToImage("next");
   }
 
   /**
    * Handles slideshow previous requests
    */
   private async handleSlideshowPrevious(): Promise<void> {
-    await this.navigateToImage('previous');
+    await this.navigateToImage("previous");
   }
 
   /**
@@ -319,14 +329,16 @@ export class ImageWebSocketServer {
       }
 
       const currentIndex = this.slideshowState.currentImageId
-        ? images.findIndex(img => img.id === this.slideshowState.currentImageId)
+        ? images.findIndex((img) => img.id === this.slideshowState.currentImageId)
         : -1;
-      
+
       if (currentIndex >= 0) {
         // Move to next image - use random selection if enabled, otherwise sequential
         if (this.randomOrder) {
           // Random selection: pick a random image that's not the current one
-          const availableImages = images.filter(img => img.id !== this.slideshowState.currentImageId);
+          const availableImages = images.filter(
+            (img) => img.id !== this.slideshowState.currentImageId
+          );
           if (availableImages.length > 0) {
             const randomIndex = Math.floor(Math.random() * availableImages.length);
             this.slideshowState.currentImageId = availableImages[randomIndex].id;
@@ -370,7 +382,7 @@ export class ImageWebSocketServer {
    */
   private broadcast(message: WebSocketMessage): void {
     const messageStr = JSON.stringify(message);
-    
+
     this.clients.forEach((client) => {
       if (client.readyState === WebSocket.OPEN) {
         client.send(messageStr);
@@ -384,10 +396,10 @@ export class ImageWebSocketServer {
   async broadcastImages(): Promise<void> {
     try {
       const images = await getAllImages();
-      
+
       // Verify current image still exists, if not, reset to first image or null
       if (this.slideshowState.currentImageId) {
-        const imageExists = images.some(img => img.id === this.slideshowState.currentImageId);
+        const imageExists = images.some((img) => img.id === this.slideshowState.currentImageId);
         if (!imageExists) {
           // Current image was deleted, reset to first image if available
           if (images.length > 0) {
@@ -404,9 +416,9 @@ export class ImageWebSocketServer {
         this.slideshowState.currentImageId = images[0].id;
         await this.saveSlideshowState();
       }
-      
+
       this.broadcast({ type: "images", images });
-      
+
       // Also broadcast updated slideshow state
       this.broadcastCurrentImage();
       this.broadcastIsPlaying();
@@ -486,13 +498,15 @@ export class ImageWebSocketServer {
       const state = await getSlideshowState();
       this.slideshowState.currentImageId = state.currentImageId;
       this.slideshowState.isPlaying = state.isPlaying;
-      
+
       // If playing, start the auto-play interval
       if (state.isPlaying) {
         this.startAutoPlay();
       }
-      
-      console.log(`Loaded slideshow state from database: currentImageId=${state.currentImageId}, isPlaying=${state.isPlaying}`);
+
+      console.log(
+        `Loaded slideshow state from database: currentImageId=${state.currentImageId}, isPlaying=${state.isPlaying}`
+      );
     } catch (error) {
       console.error("Error loading slideshow state from database:", error);
       // Keep default state
@@ -542,4 +556,3 @@ export class ImageWebSocketServer {
     this.wss.close();
   }
 }
-

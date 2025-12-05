@@ -10,7 +10,9 @@
     "db:push": "drizzle-kit push",
     "create-user": "npx tsx src/scripts/create-user.ts",
     "docker:build": "GIT_HASH=$(git rev-parse HEAD 2>/dev/null || echo 'unknown') docker-compose build",
-    "docker:up": "GIT_HASH=$(git rev-parse HEAD 2>/dev/null || echo 'unknown') docker-compose up -d"
+    "docker:up": "GIT_HASH=$(git rev-parse HEAD 2>/dev/null || echo 'unknown') docker-compose up -d",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,html,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,html,md}\""
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -49,6 +51,7 @@
     "@types/react-dom": "^19.1.2",
     "@vitejs/plugin-react": "^4.4.1",
     "nodemon": "^3.1.11",
+    "prettier": "^3.7.4",
     "vite": "^6.3.3",
     "vite-plugin-pwa": "^1.2.0",
     "workbox-core": "^7.4.0",
