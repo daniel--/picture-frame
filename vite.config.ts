@@ -4,7 +4,12 @@ import { VitePWA } from "vite-plugin-pwa";
 import { execSync } from "child_process";
 
 // Get git hash at build time
+// First try environment variable (for Docker builds), then try git command
 function getGitHash() {
+  // Check for build arg from Docker
+  if (process.env.GIT_HASH) {
+    return process.env.GIT_HASH;
+  }
   try {
     return execSync('git rev-parse HEAD').toString().trim();
   } catch (e) {
@@ -13,6 +18,10 @@ function getGitHash() {
 }
 
 function getGitShortHash() {
+  // Check for build arg from Docker
+  if (process.env.GIT_HASH) {
+    return process.env.GIT_HASH.substring(0, 7);
+  }
   try {
     return execSync('git rev-parse --short HEAD').toString().trim();
   } catch (e) {

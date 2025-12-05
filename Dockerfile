@@ -5,6 +5,10 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Accept git hash as build argument
+ARG GIT_HASH=unknown
+ENV GIT_HASH=${GIT_HASH}
+
 # Copy package files
 COPY package*.json ./
 COPY tsconfig.json ./
