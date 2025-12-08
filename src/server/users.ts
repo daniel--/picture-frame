@@ -410,3 +410,114 @@ export async function acceptInvite(input: AcceptInviteInput): Promise<PublicUser
   };
   return publicUser;
 }
+
+/**
+ * Gets all users (public information only)
+ * @returns Array of all users (without passwords and reset tokens)
+ */
+export async function getAllUsers(): Promise<PublicUser[]> {
+  const users = await db
+    .select({
+      id: usersTable.id,
+      name: usersTable.name,
+      email: usersTable.email,
+      createdAt: usersTable.createdAt,
+      updatedAt: usersTable.updatedAt,
+    })
+    .from(usersTable);
+
+  return users;
+}
+
+/**
+ * Public invite type (for admin display)
+ */
+export type PublicInvite = {
+  id: number;
+  email: string;
+  token: string;
+  expiresAt: string;
+  used: number;
+  createdAt: string | null;
+  updatedAt: string | null;
+  isExpired: boolean;
+  isPending: boolean;
+};
+
+/**
+ * Gets all invites with their status (pending, expired, used)
+ * @returns Array of all invites with computed status
+ */
+export async function getAllInvites(): Promise<PublicInvite[]> {
+  const invites = await db.select().from(invitesTable);
+
+  const now = new Date();
+
+  return invites.map((invite) => {
+    const expiryDate = new Date(invite.expiresAt);
+    const isExpired = expiryDate < now;
+    const isPending = invite.used === 0 && !isExpired;
+
+    return {
+      id: invite.id,
+      email: invite.email,
+      token: invite.token,
+      expiresAt: invite.expiresAt,
+      used: invite.used,
+      createdAt: invite.createdAt,
+      updatedAt: invite.updatedAt,
+      isExpired,
+      isPending,
+    };
+  });
+}
+
+/**
+ * Resends an invite by updating the token and expiry, then sending email
+ * @param inviteId The ID of the invite to resend
+ * @returns New invite token
+ * @throws Error if invite not found or email service unavailable
+ */
+export async function resendInvite(inviteId: number): Promise<{ token: string }> {
+  // Find the invite
+  const [invite] = await db
+    .select()
+    .from(invitesTable)
+    .where(eq(invitesTable.id, inviteId))
+    .limit(1);
+
+  if (!invite) {
+    throw new AppError("Invite not found", ErrorType.NOT_FOUND);
+  }
+
+  // Check if user already exists (in case they registered another way)
+  const existingUser = await db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.email, invite.email))
+    .limit(1);
+
+  if (existingUser.length > 0) {
+    throw new AppError("User with this email already exists", ErrorType.CONFLICT);
+  }
+
+  // Generate new secure random token
+  const newToken = crypto.randomBytes(32).toString("hex");
+
+  // Calculate new expiry time (7 days from now)
+  const expiryDate = new Date();
+  expiryDate.setDate(expiryDate.getDate() + INVITE_EXPIRY_DAYS);
+  const expiryTimestamp = expiryDate.toISOString();
+
+  // Update invite with new token and expiry
+  await db
+    .update(invitesTable)
+    .set({
+      token: newToken,
+      expiresAt: expiryTimestamp,
+      used: 0, // Reset used status if it was set
+    })
+    .where(eq(invitesTable.id, inviteId));
+
+  return { token: newToken };
+}

@@ -18,6 +18,9 @@ import {
   validateInvite,
   acceptInvite,
   AcceptInviteInput,
+  getAllUsers,
+  getAllInvites,
+  resendInvite,
 } from "./users.js";
 import { AppError, ErrorType, asyncHandler, errorHandler } from "./errors.js";
 import { authenticateToken, AuthRequest } from "./auth.js";
@@ -134,6 +137,73 @@ app.post(
 
     return res.json({
       message: "Password has been reset successfully. You can now log in with your new password.",
+    });
+  })
+);
+
+// Get all users endpoint (protected by JWT - admin only)
+app.get(
+  "/api/users",
+  authenticateToken,
+  asyncHandler(async (req: AuthRequest, res) => {
+    // authenticateToken middleware ensures req.user exists
+    const users = await getAllUsers();
+
+    return res.json({ users });
+  })
+);
+
+// Get all invites endpoint (protected by JWT - admin only)
+app.get(
+  "/api/invites",
+  authenticateToken,
+  asyncHandler(async (req: AuthRequest, res) => {
+    // authenticateToken middleware ensures req.user exists
+    const invites = await getAllInvites();
+
+    return res.json({ invites });
+  })
+);
+
+// Resend invite endpoint (protected by JWT - admin only)
+app.post(
+  "/api/invites/:id/resend",
+  authenticateToken,
+  asyncHandler(async (req: AuthRequest, res) => {
+    // authenticateToken middleware ensures req.user exists
+    const inviteId = parseInt(req.params.id, 10);
+
+    if (isNaN(inviteId)) {
+      throw new AppError("Invalid invite ID", ErrorType.BAD_REQUEST);
+    }
+
+    // Check if email service is enabled
+    if (!isEmailEnabled()) {
+      throw new AppError(
+        "Email service is not configured. Cannot resend invites.",
+        ErrorType.SERVICE_UNAVAILABLE
+      );
+    }
+
+    // Resend the invite (updates token and expiry)
+    const { token } = await resendInvite(inviteId);
+
+    // Get the invite to get the email
+    const invites = await getAllInvites();
+    const invite = invites.find((inv) => inv.id === inviteId);
+
+    if (!invite) {
+      throw new AppError("Invite not found after resend", ErrorType.NOT_FOUND);
+    }
+
+    // Get base URL from environment or construct from request
+    const appUrl = env.APP_URL || `${req.protocol}://${req.get("host") || `localhost:${env.PORT}`}`;
+
+    // Send invite email with new token
+    await sendInviteEmail(invite.email, token, appUrl);
+
+    return res.json({
+      message: "Invite resent successfully",
     });
   })
 );

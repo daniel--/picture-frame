@@ -338,6 +338,156 @@
   }
 }
 
+/* Invites List Styles */
+.settings-invites-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.settings-invite-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  border: 1px solid var(--color-border-light);
+  border-radius: 8px;
+  background-color: var(--color-bg-white);
+  transition: all 0.2s ease;
+  gap: 1rem;
+}
+
+.settings-invite-item:hover {
+  border-color: var(--color-border-medium);
+  box-shadow: var(--shadow-sm);
+}
+
+.settings-invite-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.settings-invite-email {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.settings-invite-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.settings-invite-status-pending {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.settings-invite-status-expired {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.settings-invite-status-used {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.settings-invite-date {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  margin-top: 0.25rem;
+}
+
+.settings-invite-resend-btn {
+  padding: 0.5rem 1rem;
+  background: var(--gradient-primary);
+  color: var(--color-text-white);
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.settings-invite-resend-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-primary);
+}
+
+.settings-invite-resend-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.settings-invite-resend-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Users List Styles */
+.settings-users-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.settings-user-item {
+  padding: 1rem;
+  border: 1px solid var(--color-border-light);
+  border-radius: 8px;
+  background-color: var(--color-bg-white);
+  transition: all 0.2s ease;
+}
+
+.settings-user-item:hover {
+  border-color: var(--color-border-medium);
+  box-shadow: var(--shadow-sm);
+}
+
+.settings-user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.settings-user-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.settings-user-email {
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+}
+
+.settings-user-date {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  margin-top: 0.25rem;
+}
+
 /* Small Mobile Styles */
 @media (max-width: 480px) {
   .settings-speed-option {
