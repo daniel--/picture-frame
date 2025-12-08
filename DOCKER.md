@@ -95,12 +95,27 @@ docker-compose down -v
 
 ## Environment Variables
 
-| Variable       | Description                      | Default                     | Required |
-| -------------- | -------------------------------- | --------------------------- | -------- |
-| `JWT_SECRET`   | Secret key for JWT token signing | -                           | Yes      |
-| `DB_FILE_NAME` | Path to SQLite database file     | `/data/db/picture-frame.db` | No       |
-| `PORT`         | Server port                      | `3000`                      | No       |
-| `NODE_ENV`     | Node environment                 | `production`                | No       |
+| Variable          | Description                                    | Default                     | Required |
+| ----------------- | ---------------------------------------------- | --------------------------- | -------- |
+| `JWT_SECRET`      | Secret key for JWT token signing               | -                           | Yes      |
+| `DB_FILE_NAME`    | Path to SQLite database file                   | `/data/db/picture-frame.db` | No       |
+| `PORT`            | Server port                                    | `3000`                      | No       |
+| `NODE_ENV`        | Node environment                               | `production`                | No       |
+| `EMAIL_ENABLED`   | Enable email functionality (set to `true`)     | -                           | No       |
+| `SMTP_HOST`       | SMTP server hostname (e.g., `smtp.gmail.com`)  | -                           | No\*     |
+| `SMTP_PORT`       | SMTP server port (587 for TLS, 465 for SSL)    | `587`                       | No\*     |
+| `SMTP_SECURE`     | Use SSL/TLS (`true` for port 465)              | `false`                     | No\*     |
+| `SMTP_USER`       | SMTP username (your Gmail address)             | -                           | No\*     |
+| `SMTP_PASSWORD`   | SMTP password (Gmail app password)             | -                           | No\*     |
+| `EMAIL_FROM`      | From email address                             | -                           | No\*     |
+| `EMAIL_FROM_NAME` | From name (display name)                       | `Picture Frame`             | No\*     |
+| `APP_URL`         | Base URL of your application (for reset links) | Auto-detected               | No       |
+
+\* Required if `EMAIL_ENABLED=true`
+
+### Email Configuration
+
+See the [README.md](README.md#email-configuration-gmail) for detailed Gmail setup instructions. Add the email configuration variables to your `.env.production` file if you want to enable password reset functionality.
 
 ## Health Check
 

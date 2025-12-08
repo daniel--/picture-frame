@@ -4,9 +4,24 @@ import jwt from "jsonwebtoken";
 import path from "path";
 import ViteExpress from "vite-express";
 import { createServer } from "http";
-import { login, LoginInput, createUser, CreateUserInput } from "./users.js";
+import {
+  login,
+  LoginInput,
+  createUser,
+  CreateUserInput,
+  requestPasswordReset,
+  RequestPasswordResetInput,
+  resetPassword,
+  ResetPasswordInput,
+  createInvite,
+  CreateInviteInput,
+  validateInvite,
+  acceptInvite,
+  AcceptInviteInput,
+} from "./users.js";
 import { AppError, ErrorType, asyncHandler, errorHandler } from "./errors.js";
 import { authenticateToken, AuthRequest } from "./auth.js";
+import { sendPasswordResetEmail, sendInviteEmail, isEmailEnabled } from "./email.js";
 import {
   upload,
   createImage,
@@ -66,23 +81,149 @@ app.post(
   })
 );
 
-// Create user endpoint (protected by JWT)
+// Request password reset endpoint (public)
 app.post(
-  "/api/users/create",
+  "/api/password/reset-request",
+  asyncHandler(async (req, res) => {
+    const { email }: RequestPasswordResetInput = req.body;
+
+    if (!email) {
+      throw new AppError("Email is required", ErrorType.BAD_REQUEST);
+    }
+
+    // Check if email service is enabled
+    if (!isEmailEnabled()) {
+      throw new AppError(
+        "Password reset via email is not configured. Please contact your administrator.",
+        ErrorType.SERVICE_UNAVAILABLE
+      );
+    }
+
+    // Generate reset token
+    const { token } = await requestPasswordReset({ email });
+
+    // Only send email if token was generated (user exists)
+    if (token) {
+      // Get base URL from environment or construct from request
+      const appUrl =
+        env.APP_URL || `${req.protocol}://${req.get("host") || `localhost:${env.PORT}`}`;
+
+      // Send password reset email
+      await sendPasswordResetEmail(email, token, appUrl);
+    }
+
+    // Always return success (don't reveal if user exists)
+    return res.json({
+      message: "If an account with that email exists, a password reset link has been sent.",
+    });
+  })
+);
+
+// Reset password endpoint (public)
+app.post(
+  "/api/password/reset",
+  asyncHandler(async (req, res) => {
+    const { token, newPassword }: ResetPasswordInput = req.body;
+
+    if (!token || !newPassword) {
+      throw new AppError("Token and new password are required", ErrorType.BAD_REQUEST);
+    }
+
+    // Reset the password
+    await resetPassword({ token, newPassword });
+
+    return res.json({
+      message: "Password has been reset successfully. You can now log in with your new password.",
+    });
+  })
+);
+
+// Create invite endpoint (protected by JWT - admin only)
+app.post(
+  "/api/users/invite",
   authenticateToken,
   asyncHandler(async (req: AuthRequest, res) => {
     // authenticateToken middleware ensures req.user exists
-    const { name, email, password }: CreateUserInput = req.body;
+    const { email }: CreateInviteInput = req.body;
 
-    if (!name || !email || !password) {
-      throw new AppError("Name, email, and password are required", ErrorType.BAD_REQUEST);
+    if (!email) {
+      throw new AppError("Email is required", ErrorType.BAD_REQUEST);
     }
 
-    // Create the user
-    const newUser = await createUser({ name, email, password });
+    // Check if email service is enabled
+    if (!isEmailEnabled()) {
+      throw new AppError(
+        "Email service is not configured. Cannot send invites.",
+        ErrorType.SERVICE_UNAVAILABLE
+      );
+    }
+
+    // Create the invite
+    const { token } = await createInvite({ email });
+
+    // Get base URL from environment or construct from request
+    const appUrl = env.APP_URL || `${req.protocol}://${req.get("host") || `localhost:${env.PORT}`}`;
+
+    // Send invite email
+    await sendInviteEmail(email, token, appUrl);
 
     return res.json({
-      message: "User created successfully",
+      message: "Invite sent successfully",
+    });
+  })
+);
+
+// Validate invite endpoint (public)
+app.get(
+  "/api/invite/:token",
+  asyncHandler(async (req, res) => {
+    const { token } = req.params;
+
+    if (!token) {
+      throw new AppError("Invite token is required", ErrorType.BAD_REQUEST);
+    }
+
+    // Validate invite and get email
+    const { email } = await validateInvite(token);
+
+    return res.json({
+      email,
+      valid: true,
+    });
+  })
+);
+
+// Accept invite endpoint (public)
+app.post(
+  "/api/invite/:token/accept",
+  asyncHandler(async (req, res) => {
+    const { token } = req.params;
+    const { name, password }: Omit<AcceptInviteInput, "token"> = req.body;
+
+    if (!token) {
+      throw new AppError("Invite token is required", ErrorType.BAD_REQUEST);
+    }
+
+    if (!name || !password) {
+      throw new AppError("Name and password are required", ErrorType.BAD_REQUEST);
+    }
+
+    // Accept invite and create user
+    const newUser = await acceptInvite({ token, name, password });
+
+    // Generate JWT token for automatic login
+    const jwtToken = jwt.sign(
+      {
+        id: newUser.id,
+        email: newUser.email,
+        name: newUser.name,
+      },
+      env.JWT_SECRET
+    );
+
+    return res.json({
+      message: "Account created successfully",
+      token: jwtToken,
       user: {
         id: newUser.id,
         name: newUser.name,

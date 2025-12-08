@@ -245,12 +245,51 @@ picture-frame/
 
 ### Environment Variables
 
-| Variable       | Description                | Default        | Required |
-| -------------- | -------------------------- | -------------- | -------- |
-| `JWT_SECRET`   | Secret key for JWT signing | -              | Yes      |
-| `DB_FILE_NAME` | SQLite database file path  | `local.sqlite` | No       |
-| `PORT`         | Server port                | `3000`         | No       |
-| `NODE_ENV`     | Environment mode           | `development`  | No       |
+| Variable          | Description                                        | Default         | Required |
+| ----------------- | -------------------------------------------------- | --------------- | -------- |
+| `JWT_SECRET`      | Secret key for JWT signing                         | -               | Yes      |
+| `DB_FILE_NAME`    | SQLite database file path                          | `local.sqlite`  | No       |
+| `PORT`            | Server port                                        | `3000`          | No       |
+| `NODE_ENV`        | Environment mode                                   | `development`   | No       |
+| `EMAIL_ENABLED`   | Enable email functionality (set to `true`)         | -               | No       |
+| `SMTP_HOST`       | SMTP server hostname (e.g., `smtp.gmail.com`)      | -               | No\*     |
+| `SMTP_PORT`       | SMTP server port (587 for TLS, 465 for SSL)        | `587`           | No\*     |
+| `SMTP_SECURE`     | Use SSL/TLS (`true` for port 465, `false` for 587) | `false`         | No\*     |
+| `SMTP_USER`       | SMTP username (your Gmail address)                 | -               | No\*     |
+| `SMTP_PASSWORD`   | SMTP password (Gmail app password)                 | -               | No\*     |
+| `EMAIL_FROM`      | From email address                                 | -               | No\*     |
+| `EMAIL_FROM_NAME` | From name (display name)                           | `Picture Frame` | No\*     |
+| `APP_URL`         | Base URL of your application (for reset links)     | Auto-detected   | No       |
+
+\* Required if `EMAIL_ENABLED=true`
+
+#### Email Configuration (Gmail)
+
+To enable password reset emails with Gmail:
+
+1. **Enable 2-Step Verification** on your Google Account (required for app passwords)
+
+2. **Generate an App Password**:
+   - Go to [Google Account Security](https://myaccount.google.com/security)
+   - Under "2-Step Verification", click "App passwords"
+   - Select "Mail" and "Other (Custom name)"
+   - Enter "Picture Frame" as the name
+   - Copy the generated 16-character password
+
+3. **Add to your `.env` file**:
+   ```env
+   EMAIL_ENABLED=true
+   SMTP_HOST=smtp.gmail.com
+   SMTP_PORT=587
+   SMTP_SECURE=false
+   SMTP_USER=your-email@gmail.com
+   SMTP_PASSWORD=your-16-char-app-password
+   EMAIL_FROM=your-email@gmail.com
+   EMAIL_FROM_NAME=Picture Frame
+   APP_URL=https://your-domain.com
+   ```
+
+**Note**: The email service is optional. If not configured, password reset functionality will be unavailable, but all other features will work normally.
 
 ## 🤝 Contributing
 

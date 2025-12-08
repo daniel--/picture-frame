@@ -12,6 +12,8 @@ export const usersTable = sqliteTable("users_table", {
   name: text().notNull(),
   email: text().notNull().unique(),
   password: text().notNull(),
+  resetToken: text(),
+  resetTokenExpiry: text(),
 });
 
 export const imagesTable = sqliteTable("images_table", {
@@ -32,9 +34,19 @@ export const settingsTable = sqliteTable("settings_table", {
   value: text().notNull(),
 });
 
+export const invitesTable = sqliteTable("invites_table", {
+  ...baseSchema,
+  email: text().notNull(),
+  token: text().notNull().unique(),
+  expiresAt: text().notNull(),
+  used: int().notNull().default(0), // 0 = false, 1 = true
+});
+
 export type Image = InferSelectModel<typeof imagesTable>;
 export type NewImage = InferInsertModel<typeof imagesTable>;
 export type User = InferSelectModel<typeof usersTable>;
 export type NewUser = InferInsertModel<typeof usersTable>;
 export type Setting = InferSelectModel<typeof settingsTable>;
 export type NewSetting = InferInsertModel<typeof settingsTable>;
+export type Invite = InferSelectModel<typeof invitesTable>;
+export type NewInvite = InferInsertModel<typeof invitesTable>;

@@ -1,15 +1,13 @@
 import { useState, FormEvent } from "react";
 import { api, ApiError } from "../api.js";
 
-interface UserFormData {
-  name: string;
+interface InviteFormData {
   email: string;
-  password: string;
 }
 
-interface UseUserFormReturn {
-  formData: UserFormData;
-  setFormData: React.Dispatch<React.SetStateAction<UserFormData>>;
+interface UseInviteFormReturn {
+  formData: InviteFormData;
+  setFormData: React.Dispatch<React.SetStateAction<InviteFormData>>;
   error: string | null;
   success: string | null;
   isSubmitting: boolean;
@@ -17,17 +15,15 @@ interface UseUserFormReturn {
   resetForm: () => void;
 }
 
-const initialFormData: UserFormData = {
-  name: "",
+const initialFormData: InviteFormData = {
   email: "",
-  password: "",
 };
 
 /**
- * Hook for managing user creation form state and submission
+ * Hook for managing user invite form state and submission
  */
-export function useUserForm(): UseUserFormReturn {
-  const [formData, setFormData] = useState<UserFormData>(initialFormData);
+export function useUserForm(): UseInviteFormReturn {
+  const [formData, setFormData] = useState<InviteFormData>(initialFormData);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -39,18 +35,18 @@ export function useUserForm(): UseUserFormReturn {
     setIsSubmitting(true);
 
     try {
-      await api("/api/users/create", {
+      await api("/api/users/invite", {
         method: "POST",
         body: formData,
       });
 
-      setSuccess("User created successfully!");
+      setSuccess("Invite sent successfully!");
       setFormData(initialFormData);
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message);
       } else {
-        setError("Failed to create user. Please try again.");
+        setError("Failed to send invite. Please try again.");
       }
     } finally {
       setIsSubmitting(false);

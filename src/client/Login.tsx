@@ -1,5 +1,5 @@
 import { useState, FormEvent, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { api, ApiError } from "./api";
 import { useAuth } from "./hooks/useAuth";
 import "./Login.css";
@@ -90,6 +90,11 @@ function Login() {
               {isLoading ? "Logging in..." : "Login"}
             </button>
           </form>
+          <div style={{ marginTop: "1rem", textAlign: "center" }}>
+            <Link to="/reset-password-request" style={{ color: "inherit", opacity: 0.9 }}>
+              Forgot your password?
+            </Link>
+          </div>
         </div>
       </div>
     </div>
