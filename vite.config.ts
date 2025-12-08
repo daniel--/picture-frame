@@ -29,6 +29,10 @@ function getGitShortHash() {
   }
 }
 
+function getAppName() {
+  return process.env.APP_NAME || "Family Photos";
+}
+
 // https://vitejs.dev/config/
 export default defineConfig({
   define: {
@@ -66,8 +70,8 @@ export default defineConfig({
       },
       includeAssets: ["favicon.ico", "apple-touch-icon.png"],
       manifest: {
-        name: "Family Photos",
-        short_name: "Family Photos",
+        name: getAppName(),
+        short_name: getAppName(),
         description: "A digital picture frame for family photos",
         theme_color: "#5f7be9",
         background_color: "#5f7be9",

@@ -21,6 +21,7 @@ interface EnvConfig {
   PORT: number;
   email: EmailConfig | null;
   APP_URL: string | null;
+  APP_NAME: string;
 }
 
 /**
@@ -58,6 +59,9 @@ export function getEnvConfig(): EnvConfig {
     }
   }
 
+  // APP_NAME (optional, defaults to "Family Photos")
+  const appName = process.env.APP_NAME || "Family Photos";
+
   // Email configuration (optional)
   let email: EmailConfig | null = null;
   const emailEnabled = process.env.EMAIL_ENABLED === "true";
@@ -83,7 +87,7 @@ export function getEnvConfig(): EnvConfig {
         smtpUser,
         smtpPassword,
         fromEmail,
-        fromName: process.env.EMAIL_FROM_NAME || "Picture Frame",
+        fromName: process.env.EMAIL_FROM_NAME || appName,
       };
     }
   }
@@ -94,7 +98,6 @@ export function getEnvConfig(): EnvConfig {
 
   // APP_URL (optional, for password reset links)
   const appUrl = process.env.APP_URL || null;
-
   return {
     JWT_SECRET: jwtSecret!,
     DB_FILE_NAME: dbFileName!,
@@ -102,6 +105,7 @@ export function getEnvConfig(): EnvConfig {
     PORT: port,
     email,
     APP_URL: appUrl,
+    APP_NAME: appName,
   };
 }
 

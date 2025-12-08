@@ -2,6 +2,15 @@ import { Link, NavLink } from "react-router-dom";
 import { useState } from "react";
 import "./Header.css";
 
+// Declare global type for injected config
+declare global {
+  interface Window {
+    __APP_CONFIG__?: {
+      appName: string;
+    };
+  }
+}
+
 interface HeaderProps {
   userName: string | null;
   connected: boolean;
@@ -10,6 +19,7 @@ interface HeaderProps {
 
 export function Header({ userName, connected, onLogout }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const appName = window.__APP_CONFIG__?.appName || "Family Photos";
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
@@ -23,7 +33,7 @@ export function Header({ userName, connected, onLogout }: HeaderProps) {
     <header className="header">
       <div className="header-content">
         <Link to="/" className="header-title-link">
-          <h1 className="header-title">Family Photos</h1>
+          <h1 className="header-title">{appName}</h1>
         </Link>
         <button className="header-hamburger" onClick={toggleMobileMenu} aria-label="Toggle menu">
           <span className={`header-hamburger-line ${mobileMenuOpen ? "open" : ""}`}></span>

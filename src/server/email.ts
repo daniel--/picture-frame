@@ -107,8 +107,9 @@ export async function sendPasswordResetEmail(
 ): Promise<void> {
   const resetLink = `${resetUrl}/reset-password?token=${resetToken}`;
 
-  const subject = "Password Reset Request - Picture Frame";
-  const text = `You requested a password reset for your Picture Frame account.
+  const appName = env.APP_NAME;
+  const subject = `Password Reset Request - ${appName}`;
+  const text = `You requested a password reset for your ${appName} account.
 
 Click the following link to reset your password:
 ${resetLink}
@@ -120,7 +121,7 @@ If you did not request this password reset, please ignore this email.`;
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <h2 style="color: #333;">Password Reset Request</h2>
-      <p>You requested a password reset for your Picture Frame account.</p>
+      <p>You requested a password reset for your ${appName} account.</p>
       <p>
         <a href="${resetLink}" 
            style="display: inline-block; padding: 12px 24px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px;">
@@ -151,9 +152,10 @@ export async function sendInviteEmail(
   appUrl: string
 ): Promise<void> {
   const inviteLink = `${appUrl}/accept-invite?token=${inviteToken}`;
+  const appName = env.APP_NAME;
 
-  const subject = "You've been invited to Picture Frame";
-  const text = `You've been invited to create an account for Picture Frame.
+  const subject = `You've been invited to ${appName}`;
+  const text = `You've been invited to create an account for ${appName}.
 
 Click the following link to create your account:
 ${inviteLink}
@@ -164,8 +166,8 @@ If you did not expect this invite, please ignore this email.`;
 
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <h2 style="color: #333;">You've been invited to Picture Frame</h2>
-      <p>You've been invited to create an account for Picture Frame.</p>
+      <h2 style="color: #333;">You've been invited to ${appName}</h2>
+      <p>You've been invited to create an account for ${appName}.</p>
       <p>
         <a href="${inviteLink}" 
            style="display: inline-block; padding: 12px 24px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px;">
@@ -190,8 +192,9 @@ If you did not expect this invite, please ignore this email.`;
  * @param userName User's name
  */
 export async function sendWelcomeEmail(to: string, userName: string): Promise<void> {
-  const subject = "Welcome to Picture Frame";
-  const text = `Welcome to Picture Frame, ${userName}!
+  const appName = env.APP_NAME;
+  const subject = `Welcome to ${appName}`;
+  const text = `Welcome to ${appName}, ${userName}!
 
 Your account has been successfully created. You can now log in and start uploading your photos.
 
@@ -199,7 +202,7 @@ Enjoy your digital picture frame!`;
 
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <h2 style="color: #333;">Welcome to Picture Frame!</h2>
+      <h2 style="color: #333;">Welcome to ${appName}!</h2>
       <p>Hi ${userName},</p>
       <p>Your account has been successfully created. You can now log in and start uploading your photos.</p>
       <p>Enjoy your digital picture frame! 📸</p>

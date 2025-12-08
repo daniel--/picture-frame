@@ -24,7 +24,7 @@ import {
 } from "./users.js";
 import { AppError, ErrorType, asyncHandler, errorHandler } from "./errors.js";
 import { authenticateToken, AuthRequest } from "./auth.js";
-import { sendPasswordResetEmail, sendInviteEmail, isEmailEnabled } from "./email.js";
+import { sendPasswordResetEmail, sendInviteEmail } from "./email.js";
 import {
   upload,
   createImage,
@@ -51,6 +51,35 @@ app.use((req, res, next) => {
     res.setHeader("Pragma", "no-cache");
     res.setHeader("Expires", "0");
   }
+  next();
+});
+
+// Middleware to inject app config into HTML and set document title/meta tags
+app.use((req, res, next) => {
+  const originalSend = res.send;
+  res.send = function (body: any) {
+    if (typeof body === "string" && body.includes("<!-- APP_CONFIG_PLACEHOLDER -->")) {
+      // Inject app config as a script tag
+      const configScript = `<script>window.__APP_CONFIG__ = { appName: ${JSON.stringify(env.APP_NAME)} };</script>`;
+      body = body.replace("<!-- APP_CONFIG_PLACEHOLDER -->", configScript);
+
+      // Set document title (escape HTML entities)
+      const escapedAppName = env.APP_NAME.replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+      body = body.replace(/<title>.*?<\/title>/, `<title>${escapedAppName}</title>`);
+
+      // Set apple-mobile-web-app-title meta tag (escape quotes)
+      const metaAppName = env.APP_NAME.replace(/"/g, "&quot;");
+      body = body.replace(
+        /<meta name="apple-mobile-web-app-title" content=".*?"\s*\/?>/,
+        `<meta name="apple-mobile-web-app-title" content="${metaAppName}" />`
+      );
+    }
+    return originalSend.call(this, body);
+  };
   next();
 });
 
@@ -92,14 +121,6 @@ app.post(
 
     if (!email) {
       throw new AppError("Email is required", ErrorType.BAD_REQUEST);
-    }
-
-    // Check if email service is enabled
-    if (!isEmailEnabled()) {
-      throw new AppError(
-        "Password reset via email is not configured. Please contact your administrator.",
-        ErrorType.SERVICE_UNAVAILABLE
-      );
     }
 
     // Generate reset token
@@ -177,14 +198,6 @@ app.post(
       throw new AppError("Invalid invite ID", ErrorType.BAD_REQUEST);
     }
 
-    // Check if email service is enabled
-    if (!isEmailEnabled()) {
-      throw new AppError(
-        "Email service is not configured. Cannot resend invites.",
-        ErrorType.SERVICE_UNAVAILABLE
-      );
-    }
-
     // Resend the invite (updates token and expiry)
     const { token } = await resendInvite(inviteId);
 
@@ -218,14 +231,6 @@ app.post(
 
     if (!email) {
       throw new AppError("Email is required", ErrorType.BAD_REQUEST);
-    }
-
-    // Check if email service is enabled
-    if (!isEmailEnabled()) {
-      throw new AppError(
-        "Email service is not configured. Cannot send invites.",
-        ErrorType.SERVICE_UNAVAILABLE
-      );
     }
 
     // Create the invite
