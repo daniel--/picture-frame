@@ -62,7 +62,20 @@ export async function sendEmail(
 ): Promise<void> {
   const emailConfig = env.email;
   if (!isEmailEnabled() || !emailConfig || !transporter) {
-    console.warn("Email service is not configured. Email not sent to:", to);
+    console.log("=".repeat(80));
+    console.log("EMAIL (Email service not configured - printing to console)");
+    console.log("=".repeat(80));
+    console.log(`To: ${to}`);
+    console.log(`Subject: ${subject}`);
+    console.log("-".repeat(80));
+    console.log("Text Content:");
+    console.log(text);
+    if (html) {
+      console.log("-".repeat(80));
+      console.log("HTML Content:");
+      console.log(html);
+    }
+    console.log("=".repeat(80));
     return;
   }
 
