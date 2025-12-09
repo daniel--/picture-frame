@@ -5,7 +5,7 @@ import sharp from "sharp";
 import { db } from "./db/index.js";
 import { imagesTable, Image } from "./db/schema.js";
 import { AppError, ErrorType } from "./errors.js";
-import { max, eq, asc } from "drizzle-orm";
+import { max, min, eq, asc } from "drizzle-orm";
 
 // Ensure uploads directory exists
 const uploadsDir = path.join(process.cwd(), "public", "uploads");
@@ -235,8 +235,16 @@ export async function updateImageSortOrder(
     // Phase 1: Set all display orders to temporary negative values
     // Phase 2: Set them to their final values
 
+    // Get the minimum displayOrder value to calculate a safe temporary offset
+    const [minOrderResult] = await tx
+      .select({ minOrder: min(imagesTable.displayOrder) })
+      .from(imagesTable);
+
+    // Calculate starting temporary order: 10 less than the minimum, or -10 if no images exist
+    const minOrder = minOrderResult?.minOrder ?? 0;
+    let tempOrder = minOrder - 10;
+
     // Phase 1: Set temporary negative values
-    let tempOrder = -1;
     for (const { id } of imageOrders) {
       await tx.update(imagesTable).set({ displayOrder: tempOrder }).where(eq(imagesTable.id, id));
       tempOrder--;

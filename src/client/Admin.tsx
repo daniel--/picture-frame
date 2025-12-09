@@ -40,6 +40,7 @@ export function Admin() {
   const [invitesLoading, setInvitesLoading] = useState(true);
   const [invitesError, setInvitesError] = useState<string | null>(null);
   const [resendingInviteId, setResendingInviteId] = useState<number | null>(null);
+  const [cancellingInviteId, setCancellingInviteId] = useState<number | null>(null);
 
   // Fetch users when component mounts or after successful invite
   useEffect(() => {
@@ -125,6 +126,27 @@ export function Admin() {
     }
   };
 
+  const handleCancelInvite = async (inviteId: number) => {
+    setCancellingInviteId(inviteId);
+    setInvitesError(null);
+    try {
+      await api(`/api/invites/${inviteId}`, {
+        method: "DELETE",
+      });
+      // Refresh invites list
+      const data = await api<{ invites: Invite[] }>("/api/invites");
+      setInvites(data.invites);
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setInvitesError(err.message);
+      } else {
+        setInvitesError("Failed to cancel invite. Please try again.");
+      }
+    } finally {
+      setCancellingInviteId(null);
+    }
+  };
+
   return (
     <div className="settings-container">
       <Header
@@ -195,15 +217,22 @@ export function Admin() {
                               : `Expired: ${new Date(inv.expiresAt).toLocaleDateString()}`}
                         </div>
                       </div>
-                      {inv.isExpired && inv.used === 0 && (
+                      <div className="settings-invite-actions">
                         <button
                           onClick={() => handleResendInvite(inv.id)}
-                          disabled={resendingInviteId === inv.id}
+                          disabled={resendingInviteId === inv.id || inv.used === 1}
                           className="settings-invite-resend-btn"
                         >
                           {resendingInviteId === inv.id ? "Resending..." : "Resend"}
                         </button>
-                      )}
+                        <button
+                          onClick={() => handleCancelInvite(inv.id)}
+                          disabled={cancellingInviteId === inv.id || inv.used === 1}
+                          className="settings-invite-cancel-btn"
+                        >
+                          {cancellingInviteId === inv.id ? "Cancelling..." : "Cancel"}
+                        </button>
+                      </div>
                     </div>
                   ))}
               </div>

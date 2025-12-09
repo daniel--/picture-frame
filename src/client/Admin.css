@@ -445,6 +445,41 @@
   cursor: not-allowed;
 }
 
+.settings-invite-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.settings-invite-cancel-btn {
+  padding: 0.5rem 1rem;
+  background: #dc3545;
+  color: var(--color-text-white);
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.settings-invite-cancel-btn:hover:not(:disabled) {
+  background: #c82333;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+}
+
+.settings-invite-cancel-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.settings-invite-cancel-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* Users List Styles */
 .settings-users-list {
   display: flex;

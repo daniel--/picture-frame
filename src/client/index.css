@@ -9,7 +9,7 @@
   );
 
   /* Text Colors */
-  --color-text-primary: #333;
+  --color-text-primary: #100e0e;
   --color-text-secondary: #999;
   --color-text-white: white;
   --color-text-white-muted: rgba(255, 255, 255, 0.8);

@@ -21,6 +21,7 @@ import {
   getAllUsers,
   getAllInvites,
   resendInvite,
+  cancelInvite,
 } from "./users.js";
 import { AppError, ErrorType, asyncHandler, errorHandler } from "./errors.js";
 import { authenticateToken, AuthRequest } from "./auth.js";
@@ -206,6 +207,27 @@ app.post(
 
     return res.json({
       message: "Invite resent successfully",
+    });
+  })
+);
+
+// Cancel invite endpoint (protected by JWT - admin only)
+app.delete(
+  "/api/invites/:id",
+  authenticateToken,
+  asyncHandler(async (req: AuthRequest, res) => {
+    // authenticateToken middleware ensures req.user exists
+    const inviteId = parseInt(req.params.id, 10);
+
+    if (isNaN(inviteId)) {
+      throw new AppError("Invalid invite ID", ErrorType.BAD_REQUEST);
+    }
+
+    // Cancel the invite
+    await cancelInvite(inviteId);
+
+    return res.json({
+      message: "Invite cancelled successfully",
     });
   })
 );

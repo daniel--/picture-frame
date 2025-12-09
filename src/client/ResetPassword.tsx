@@ -1,6 +1,8 @@
-import { useState, FormEvent, useEffect } from "react";
+import { useState, FormEvent, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { api, ApiError } from "./api";
+import { PasswordStrength } from "./components/PasswordStrength";
+import zxcvbn from "zxcvbn";
 import "./Login.css";
 
 function ResetPassword() {
@@ -12,6 +14,22 @@ function ResetPassword() {
   const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+
+  // Calculate password strength in real-time
+  const passwordStrength = useMemo(() => {
+    if (!password) {
+      return null;
+    }
+    return zxcvbn(password);
+  }, [password]);
+
+  // Check if form is valid for submission
+  const isFormValid = useMemo(() => {
+    if (!password) return false;
+    if (password !== confirmPassword) return false;
+    if (!passwordStrength || passwordStrength.score < 2) return false;
+    return true;
+  }, [password, confirmPassword, passwordStrength]);
 
   useEffect(() => {
     if (!token) {
@@ -30,11 +48,6 @@ function ResetPassword() {
 
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
-      return;
-    }
-
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters long.");
       return;
     }
 
@@ -105,13 +118,13 @@ function ResetPassword() {
               <input
                 id="password"
                 type="password"
-                placeholder="Enter new password (min 8 characters)"
+                placeholder="Enter new password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 disabled={isLoading}
-                minLength={8}
               />
+              <PasswordStrength strength={passwordStrength} />
             </div>
             <div className="form-group">
               <label htmlFor="confirmPassword">Confirm Password</label>
@@ -123,10 +136,9 @@ function ResetPassword() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 disabled={isLoading}
-                minLength={8}
               />
             </div>
-            <button type="submit" disabled={isLoading} className="btn">
+            <button type="submit" disabled={isLoading || !isFormValid} className="btn">
               {isLoading ? "Resetting..." : "Reset Password"}
             </button>
           </form>

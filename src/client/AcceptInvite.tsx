@@ -1,7 +1,9 @@
-import { useState, FormEvent, useEffect } from "react";
+import { useState, FormEvent, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { api, ApiError } from "./api";
 import { useAuth } from "./hooks/useAuth";
+import { PasswordStrength } from "./components/PasswordStrength";
+import zxcvbn from "zxcvbn";
 import "./Login.css";
 
 interface AcceptInviteResponse {
@@ -30,6 +32,23 @@ function AcceptInvite() {
   const [isLoading, setIsLoading] = useState(false);
   const [isValidating, setIsValidating] = useState(true);
   const [validationError, setValidationError] = useState<string | null>(null);
+
+  // Calculate password strength in real-time
+  const passwordStrength = useMemo(() => {
+    if (!password) {
+      return null;
+    }
+    return zxcvbn(password, [email, name]);
+  }, [password, email, name]);
+
+  // Check if form is valid for submission
+  const isFormValid = useMemo(() => {
+    if (!name.trim()) return false;
+    if (!password) return false;
+    if (password !== confirmPassword) return false;
+    if (!passwordStrength || passwordStrength.score < 2) return false;
+    return true;
+  }, [name, password, confirmPassword, passwordStrength]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -74,11 +93,6 @@ function AcceptInvite() {
 
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
-      return;
-    }
-
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters long.");
       return;
     }
 
@@ -178,13 +192,13 @@ function AcceptInvite() {
               <input
                 id="password"
                 type="password"
-                placeholder="Enter password (min 8 characters)"
+                placeholder="Enter password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 disabled={isLoading}
-                minLength={8}
               />
+              <PasswordStrength strength={passwordStrength} />
             </div>
             <div className="form-group">
               <label htmlFor="confirmPassword">Confirm Password</label>
@@ -196,10 +210,9 @@ function AcceptInvite() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 disabled={isLoading}
-                minLength={8}
               />
             </div>
-            <button type="submit" disabled={isLoading} className="btn">
+            <button type="submit" disabled={isLoading || !isFormValid} className="btn">
               {isLoading ? "Creating Account..." : "Create Account"}
             </button>
           </form>

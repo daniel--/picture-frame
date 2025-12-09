@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import { eq } from "drizzle-orm";
+import zxcvbn from "zxcvbn";
 import { db } from "./db/index.js";
 import { usersTable, User, invitesTable, Invite } from "./db/schema.js";
 import { AppError, ErrorType } from "./errors.js";
@@ -56,8 +57,13 @@ export async function createUser(input: CreateUserInput): Promise<PublicUser> {
     throw new AppError("Name, email, and password are required", ErrorType.BAD_REQUEST);
   }
 
-  if (password.length < 8) {
-    throw new AppError("Password must be at least 8 characters long", ErrorType.BAD_REQUEST);
+  // Check password strength using zxcvbn
+  const strength = zxcvbn(password, [email, name]);
+  if (strength.score < 2) {
+    throw new AppError(
+      "Password is too weak. Please choose a stronger password.",
+      ErrorType.BAD_REQUEST
+    );
   }
 
   // Check if user already exists
@@ -199,10 +205,6 @@ export async function resetPassword(input: ResetPasswordInput): Promise<void> {
     throw new AppError("Token and new password are required", ErrorType.BAD_REQUEST);
   }
 
-  if (newPassword.length < 8) {
-    throw new AppError("Password must be at least 8 characters long", ErrorType.BAD_REQUEST);
-  }
-
   // Find user by reset token
   const [user] = await db
     .select()
@@ -212,6 +214,15 @@ export async function resetPassword(input: ResetPasswordInput): Promise<void> {
 
   if (!user) {
     throw new AppError("Invalid or expired reset token", ErrorType.UNAUTHORIZED);
+  }
+
+  // Check password strength using zxcvbn (use email as user input)
+  const strength = zxcvbn(newPassword, [user.email]);
+  if (strength.score < 2) {
+    throw new AppError(
+      "Password is too weak. Please choose a stronger password.",
+      ErrorType.BAD_REQUEST
+    );
   }
 
   // Check if token is expired
@@ -371,12 +382,17 @@ export async function acceptInvite(input: AcceptInviteInput): Promise<PublicUser
     throw new AppError("Token, name, and password are required", ErrorType.BAD_REQUEST);
   }
 
-  if (password.length < 8) {
-    throw new AppError("Password must be at least 8 characters long", ErrorType.BAD_REQUEST);
-  }
-
   // Validate invite token and get email
   const { email } = await validateInvite(token);
+
+  // Check password strength using zxcvbn
+  const strength = zxcvbn(password, [email, name]);
+  if (strength.score < 2) {
+    throw new AppError(
+      "Password is too weak. Please choose a stronger password.",
+      ErrorType.BAD_REQUEST
+    );
+  }
 
   // Hash password
   const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
@@ -520,4 +536,25 @@ export async function resendInvite(inviteId: number): Promise<{ token: string }>
     .where(eq(invitesTable.id, inviteId));
 
   return { token: newToken };
+}
+
+/**
+ * Cancels/deletes an invite
+ * @param inviteId The ID of the invite to cancel
+ * @throws Error if invite not found
+ */
+export async function cancelInvite(inviteId: number): Promise<void> {
+  // Find the invite
+  const [invite] = await db
+    .select()
+    .from(invitesTable)
+    .where(eq(invitesTable.id, inviteId))
+    .limit(1);
+
+  if (!invite) {
+    throw new AppError("Invite not found", ErrorType.NOT_FOUND);
+  }
+
+  // Delete the invite
+  await db.delete(invitesTable).where(eq(invitesTable.id, inviteId));
 }
