@@ -1,9 +1,7 @@
-import { useState, FormEvent, useEffect, useMemo } from "react";
+import { useState, FormEvent, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { api, ApiError } from "./api";
 import { useAuth } from "./hooks/useAuth";
-import { PasswordStrength } from "./components/PasswordStrength";
-import zxcvbn from "zxcvbn";
 import "./Login.css";
 
 interface AcceptInviteResponse {
@@ -33,22 +31,8 @@ function AcceptInvite() {
   const [isValidating, setIsValidating] = useState(true);
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  // Calculate password strength in real-time
-  const passwordStrength = useMemo(() => {
-    if (!password) {
-      return null;
-    }
-    return zxcvbn(password, [email, name]);
-  }, [password, email, name]);
-
   // Check if form is valid for submission
-  const isFormValid = useMemo(() => {
-    if (!name.trim()) return false;
-    if (!password) return false;
-    if (password !== confirmPassword) return false;
-    if (!passwordStrength || passwordStrength.score < 2) return false;
-    return true;
-  }, [name, password, confirmPassword, passwordStrength]);
+  const isFormValid = name.trim() && password && password === confirmPassword;
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -198,7 +182,6 @@ function AcceptInvite() {
                 required
                 disabled={isLoading}
               />
-              <PasswordStrength strength={passwordStrength} />
             </div>
             <div className="form-group">
               <label htmlFor="confirmPassword">Confirm Password</label>

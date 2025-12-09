@@ -1,8 +1,6 @@
-import { useState, FormEvent, useEffect, useMemo } from "react";
+import { useState, FormEvent, useEffect } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { api, ApiError } from "./api";
-import { PasswordStrength } from "./components/PasswordStrength";
-import zxcvbn from "zxcvbn";
 import "./Login.css";
 
 function ResetPassword() {
@@ -15,21 +13,8 @@ function ResetPassword() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Calculate password strength in real-time
-  const passwordStrength = useMemo(() => {
-    if (!password) {
-      return null;
-    }
-    return zxcvbn(password);
-  }, [password]);
-
   // Check if form is valid for submission
-  const isFormValid = useMemo(() => {
-    if (!password) return false;
-    if (password !== confirmPassword) return false;
-    if (!passwordStrength || passwordStrength.score < 2) return false;
-    return true;
-  }, [password, confirmPassword, passwordStrength]);
+  const isFormValid = password && password === confirmPassword;
 
   useEffect(() => {
     if (!token) {
@@ -124,7 +109,6 @@ function ResetPassword() {
                 required
                 disabled={isLoading}
               />
-              <PasswordStrength strength={passwordStrength} />
             </div>
             <div className="form-group">
               <label htmlFor="confirmPassword">Confirm Password</label>

@@ -1,7 +1,6 @@
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import { eq } from "drizzle-orm";
-import zxcvbn from "zxcvbn";
 import { db } from "./db/index.js";
 import { usersTable, User, invitesTable, Invite } from "./db/schema.js";
 import { AppError, ErrorType } from "./errors.js";
@@ -55,15 +54,6 @@ export async function createUser(input: CreateUserInput): Promise<PublicUser> {
   // Validate input
   if (!name || !email || !password) {
     throw new AppError("Name, email, and password are required", ErrorType.BAD_REQUEST);
-  }
-
-  // Check password strength using zxcvbn
-  const strength = zxcvbn(password, [email, name]);
-  if (strength.score < 2) {
-    throw new AppError(
-      "Password is too weak. Please choose a stronger password.",
-      ErrorType.BAD_REQUEST
-    );
   }
 
   // Check if user already exists
@@ -214,15 +204,6 @@ export async function resetPassword(input: ResetPasswordInput): Promise<void> {
 
   if (!user) {
     throw new AppError("Invalid or expired reset token", ErrorType.UNAUTHORIZED);
-  }
-
-  // Check password strength using zxcvbn (use email as user input)
-  const strength = zxcvbn(newPassword, [user.email]);
-  if (strength.score < 2) {
-    throw new AppError(
-      "Password is too weak. Please choose a stronger password.",
-      ErrorType.BAD_REQUEST
-    );
   }
 
   // Check if token is expired
@@ -384,15 +365,6 @@ export async function acceptInvite(input: AcceptInviteInput): Promise<PublicUser
 
   // Validate invite token and get email
   const { email } = await validateInvite(token);
-
-  // Check password strength using zxcvbn
-  const strength = zxcvbn(password, [email, name]);
-  if (strength.score < 2) {
-    throw new AppError(
-      "Password is too weak. Please choose a stronger password.",
-      ErrorType.BAD_REQUEST
-    );
-  }
 
   // Hash password
   const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
