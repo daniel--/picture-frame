@@ -44,35 +44,6 @@ const app = express();
 // Middleware for parsing JSON request bodies
 app.use(express.json());
 
-// Middleware to inject app config into HTML and set document title/meta tags
-app.use((req, res, next) => {
-  const originalSend = res.send;
-  res.send = function (body: any) {
-    if (typeof body === "string" && body.includes("<!-- APP_CONFIG_PLACEHOLDER -->")) {
-      // Inject app config as a script tag
-      const configScript = `<script>window.__APP_CONFIG__ = { appName: ${JSON.stringify(env.APP_NAME)} };</script>`;
-      body = body.replace("<!-- APP_CONFIG_PLACEHOLDER -->", configScript);
-
-      // Set document title (escape HTML entities)
-      const escapedAppName = env.APP_NAME.replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
-      body = body.replace(/<title>.*?<\/title>/, `<title>${escapedAppName}</title>`);
-
-      // Set apple-mobile-web-app-title meta tag (escape quotes)
-      const metaAppName = env.APP_NAME.replace(/"/g, "&quot;");
-      body = body.replace(
-        /<meta name="apple-mobile-web-app-title" content=".*?"\s*\/?>/,
-        `<meta name="apple-mobile-web-app-title" content="${metaAppName}" />`
-      );
-    }
-    return originalSend.call(this, body);
-  };
-  next();
-});
-
 // Serve uploaded images statically
 app.use("/uploads", express.static(path.join(process.cwd(), "public", "uploads")));
 

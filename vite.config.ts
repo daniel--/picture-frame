@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { defineConfig, Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 import { execSync } from "child_process";
@@ -33,12 +33,38 @@ function getAppName() {
   return process.env.APP_NAME || "Family Photos";
 }
 
+// Plugin to inject APP_NAME into HTML at build time
+function htmlAppNamePlugin(): Plugin {
+  return {
+    name: "html-app-name",
+    transformIndexHtml(html) {
+      const appName = getAppName();
+      // Escape HTML entities for title and meta tags
+      const escapedAppName = appName
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+      const metaAppName = appName.replace(/"/g, "&quot;");
+
+      return html
+        .replace(/<title>.*?<\/title>/, `<title>${escapedAppName}</title>`)
+        .replace(
+          /<meta name="apple-mobile-web-app-title" content=".*?"\s*\/?>/,
+          `<meta name="apple-mobile-web-app-title" content="${metaAppName}" />`
+        );
+    },
+  };
+}
+
 // https://vitejs.dev/config/
 export default defineConfig({
   define: {
     "import.meta.env.VITE_GIT_HASH": JSON.stringify(getGitShortHash()),
     "import.meta.env.VITE_GIT_HASH_FULL": JSON.stringify(getGitHash()),
     "import.meta.env.VITE_BUILD_TIME": JSON.stringify(new Date().toISOString()),
+    "import.meta.env.VITE_APP_NAME": JSON.stringify(getAppName()),
   },
   server: {
     hmr: {
@@ -48,6 +74,7 @@ export default defineConfig({
     },
   },
   plugins: [
+    htmlAppNamePlugin(),
     react(),
     VitePWA({
       registerType: "autoUpdate",
