@@ -35,7 +35,7 @@
     "@use-gesture/react": "^10.3.1",
     "bcrypt": "^6.0.0",
     "dotenv": "^17.2.3",
-    "drizzle-kit": "^0.31.7",
+    "drizzle-kit": "^0.31.8",
     "drizzle-orm": "^0.44.7",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
@@ -68,5 +68,8 @@
     "workbox-precaching": "^7.4.0",
     "workbox-routing": "^7.4.0",
     "workbox-window": "^7.4.0"
+  },
+  "overrides": {
+    "esbuild": ">=0.25.0"
   }
 }
