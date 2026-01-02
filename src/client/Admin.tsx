@@ -190,12 +190,13 @@ export function Admin() {
             {invitesError && <div className="settings-form-error">{invitesError}</div>}
             {invitesLoading ? (
               <p className="settings-placeholder">Loading invites...</p>
-            ) : invites.filter((inv) => inv.isPending || inv.isExpired).length === 0 ? (
+            ) : invites.filter((inv) => inv.used === 0 && (inv.isPending || inv.isExpired))
+                .length === 0 ? (
               <p className="settings-placeholder">No pending or expired invites.</p>
             ) : (
               <div className="settings-invites-list">
                 {invites
-                  .filter((inv) => inv.isPending || inv.isExpired)
+                  .filter((inv) => inv.used === 0 && (inv.isPending || inv.isExpired))
                   .map((inv) => (
                     <div key={inv.id} className="settings-invite-item">
                       <div className="settings-invite-info">
