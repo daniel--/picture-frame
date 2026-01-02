@@ -11,7 +11,10 @@ import {
 const SPEED_OPTIONS = [
   { value: 5, label: "5s" },
   { value: 60, label: "1min" },
-  { value: 600, label: "10min" },
+  { value: 300, label: "5m" },
+  { value: 600, label: "10m" },
+  { value: 900, label: "15m" },
+  { value: 1800, label: "30m" },
   { value: 3600, label: "1hr" },
   { value: 18000, label: "5hr" },
   { value: 86400, label: "1day" },
