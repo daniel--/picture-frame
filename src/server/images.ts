@@ -161,23 +161,23 @@ export async function createImage(input: {
     })
     .returning();
 
-  // Check if there are more than 20 images and delete oldest if needed
-  const MAX_IMAGES = 20;
+  // // Check if there are more than 20 images and delete oldest if needed
+  // const MAX_IMAGES = 20;
 
-  // Get all images ordered by createdAt (oldest first)
-  const allImages = await db.select().from(imagesTable).orderBy(asc(imagesTable.createdAt));
+  // // Get all images ordered by createdAt (oldest first)
+  // const allImages = await db.select().from(imagesTable).orderBy(asc(imagesTable.createdAt));
 
-  const totalImages = allImages.length;
+  // const totalImages = allImages.length;
 
-  if (totalImages > MAX_IMAGES) {
-    // Calculate how many images to delete
-    const imagesToDelete = totalImages - MAX_IMAGES;
+  // if (totalImages > MAX_IMAGES) {
+  //   // Calculate how many images to delete
+  //   const imagesToDelete = totalImages - MAX_IMAGES;
 
-    // Delete the oldest images
-    for (let i = 0; i < imagesToDelete; i++) {
-      await deleteImage(allImages[i].id);
-    }
-  }
+  //   // Delete the oldest images
+  //   for (let i = 0; i < imagesToDelete; i++) {
+  //     await deleteImage(allImages[i].id);
+  //   }
+  // }
 
   return newImage;
 }
