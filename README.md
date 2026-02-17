@@ -1,5 +1,7 @@
 # Picture Frame 🖼️
 
+## Warning this entire thing was made with AI, I tried to keep my eye on it buy buyer beware
+
 A modern, web-based digital picture frame application with slideshow controls, image management, and real-time synchronization. Perfect for running on a Raspberry Pi connected to a display, or any device with a web browser.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
