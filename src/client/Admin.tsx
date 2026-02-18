@@ -139,7 +139,8 @@ export function Admin() {
     }
   };
 
-  const handleRemoveUser = async (userId: number) => {
+  const handleRemoveUser = async (userId: number, userName: string) => {
+    if (!confirm(`Remove ${userName}? They will no longer be able to log in.`)) return;
     setRemovingUserId(userId);
     setUsersError(null);
     try {
@@ -272,7 +273,7 @@ export function Admin() {
                     {u.id !== user?.id && (
                       <div className="settings-invite-actions">
                         <button
-                          onClick={() => handleRemoveUser(u.id)}
+                          onClick={() => handleRemoveUser(u.id, u.name)}
                           disabled={removingUserId === u.id}
                           className="settings-invite-cancel-btn"
                         >
