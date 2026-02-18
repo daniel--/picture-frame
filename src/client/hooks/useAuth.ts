@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useLocalStorage } from "usehooks-ts";
 import { useNavigate } from "react-router-dom";
 
-interface User {
+export interface User {
   id: number;
   name: string;
   email: string;
@@ -53,7 +53,9 @@ export function useAuth(): UseAuthReturn {
     })
       .then((res) => {
         if (!cancelled && res.status === 401) {
-          logoutAndRedirect();
+          setToken(null);
+          setUser(null);
+          navigate("/login");
         }
       })
       .catch(() => {

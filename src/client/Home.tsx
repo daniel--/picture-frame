@@ -8,7 +8,7 @@ import { SlideshowControls } from "./components/SlideshowControls";
 
 export function Home() {
   const { user, logoutAndRedirect } = useAuth();
-  const { isProcessing } = useShareTarget();
+  useShareTarget();
 
   const slideshow = useSlideShow();
 

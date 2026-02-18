@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "./hooks/useAuth";
+import { useAuth, User } from "./hooks/useAuth";
 import "./Admin.css";
 import { Header } from "./components/Header";
 import { useSlideShow } from "./hooks/useSlideShow";
@@ -7,14 +7,6 @@ import { SlideshowControls } from "./components/SlideshowControls";
 import { useUserForm } from "./hooks/useUserForm";
 import { GIT_HASH, BUILD_TIME } from "./version";
 import { api, ApiError } from "./api";
-
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  createdAt: string | null;
-  updatedAt: string | null;
-}
 
 interface Invite {
   id: number;
@@ -31,8 +23,7 @@ interface Invite {
 export function Admin() {
   const { user, logoutAndRedirect } = useAuth();
   const slideshow = useSlideShow();
-  const { formData, setFormData, error, success, isSubmitting, handleSubmit, resetForm } =
-    useUserForm();
+  const { formData, setFormData, error, success, isSubmitting, handleSubmit } = useUserForm();
   const [users, setUsers] = useState<User[]>([]);
   const [usersLoading, setUsersLoading] = useState(true);
   const [usersError, setUsersError] = useState<string | null>(null);

@@ -185,29 +185,3 @@ If you did not expect this invite, please ignore this email.`;
 
   await sendEmail(to, subject, text, html);
 }
-
-/**
- * Send a welcome email (optional, for new user registration)
- * @param to Recipient email address
- * @param userName User's name
- */
-export async function sendWelcomeEmail(to: string, userName: string): Promise<void> {
-  const appName = env.APP_NAME;
-  const subject = `Welcome to ${appName}`;
-  const text = `Welcome to ${appName}, ${userName}!
-
-Your account has been successfully created. You can now log in and start uploading your photos.
-
-Enjoy your digital picture frame!`;
-
-  const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <h2 style="color: #333;">Welcome to ${appName}!</h2>
-      <p>Hi ${userName},</p>
-      <p>Your account has been successfully created. You can now log in and start uploading your photos.</p>
-      <p>Enjoy your digital picture frame! 📸</p>
-    </div>
-  `;
-
-  await sendEmail(to, subject, text, html);
-}
