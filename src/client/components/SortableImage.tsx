@@ -75,6 +75,10 @@ export function SortableImage({
     const wasTap = deltaX < 10 && deltaY < 10 && deltaTime < 500;
 
     if (wasTap) {
+      // Prevent the browser's synthetic click event that fires ~300ms after
+      // touchend — without this, tapping where a hidden button sits would
+      // reveal the buttons AND immediately trigger the now-visible button.
+      e.preventDefault();
       // Toggle: if this image is active, deactivate it; otherwise activate it
       onToggleActive(isActive ? null : image.id);
     }
