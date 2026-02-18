@@ -5,9 +5,11 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Accept git hash as build argument
+# Accept git hash and app name as build arguments
 ARG GIT_HASH=unknown
 ENV GIT_HASH=${GIT_HASH}
+ARG APP_NAME="Family Photos"
+ENV APP_NAME=${APP_NAME}
 
 # Copy package files
 COPY package*.json ./
@@ -58,6 +60,8 @@ RUN mkdir -p public/uploads/thumbnails
 # Set environment variables
 ENV NODE_ENV=production
 ENV PORT=3000
+ARG APP_NAME="Family Photos"
+ENV APP_NAME=${APP_NAME}
 
 # Expose port
 EXPOSE 3000
