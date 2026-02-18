@@ -69,16 +69,16 @@
 }
 
 .header-hamburger-line.open:nth-child(1) {
-  transform: rotate(45deg) translateY(8px);
+  transform: translateY(8px) rotate(45deg);
 }
 
 .header-hamburger-line.open:nth-child(2) {
   opacity: 0;
-  transform: translateX(-10px);
+  transform: scaleX(0);
 }
 
 .header-hamburger-line.open:nth-child(3) {
-  transform: rotate(-45deg) translateY(-8px);
+  transform: translateY(-8px) rotate(-45deg);
 }
 
 .header-nav-link {
