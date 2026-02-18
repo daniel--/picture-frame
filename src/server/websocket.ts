@@ -19,17 +19,8 @@ interface ClientWebSocket extends WebSocket {
   isAuthenticated?: boolean;
 }
 
-// Message types that mutate state and require authentication
-const AUTHENTICATED_MESSAGE_TYPES = new Set([
-  "reorder",
-  "slideshow-next",
-  "slideshow-previous",
-  "slideshow-play",
-  "slideshow-pause",
-  "slideshow-goto",
-  "slideshow-speed",
-  "slideshow-random-order",
-]);
+// Message types that require authentication
+const AUTHENTICATED_MESSAGE_TYPES = new Set(["reorder"]);
 
 /**
  * WebSocket server for real-time image synchronization
