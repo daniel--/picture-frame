@@ -123,6 +123,15 @@ app.post(
   })
 );
 
+// Validate token endpoint
+app.get(
+  "/api/auth/me",
+  authenticateToken,
+  asyncHandler(async (req: AuthRequest, res) => {
+    return res.json({ user: req.user });
+  })
+);
+
 // Get all users endpoint (protected by JWT - admin only)
 app.get(
   "/api/users",

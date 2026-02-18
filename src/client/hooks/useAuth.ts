@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useLocalStorage } from "usehooks-ts";
 import { useNavigate } from "react-router-dom";
 
@@ -18,16 +19,6 @@ interface UseAuthReturn {
   logoutAndRedirect: () => void;
 }
 
-function isTokenValid(token: string | null): boolean {
-  if (!token) return false;
-  try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    return typeof payload.exp !== "number" || payload.exp * 1000 > Date.now();
-  } catch {
-    return false;
-  }
-}
-
 /**
  * Hook for managing authentication state
  */
@@ -35,11 +26,6 @@ export function useAuth(): UseAuthReturn {
   const [token, setToken] = useLocalStorage<string | null>("token", null);
   const [user, setUser] = useLocalStorage<User | null>("user", null);
   const navigate = useNavigate();
-
-  const setAuth = (newToken: string, newUser: User) => {
-    setToken(newToken);
-    setUser(newUser);
-  };
 
   const logout = () => {
     setToken(null);
@@ -51,9 +37,37 @@ export function useAuth(): UseAuthReturn {
     navigate("/login");
   };
 
+  const setAuth = (newToken: string, newUser: User) => {
+    setToken(newToken);
+    setUser(newUser);
+  };
+
+  // Validate token with server whenever it changes
+  useEffect(() => {
+    if (!token) return;
+
+    let cancelled = false;
+
+    fetch("/api/auth/me", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => {
+        if (!cancelled && res.status === 401) {
+          logoutAndRedirect();
+        }
+      })
+      .catch(() => {
+        // Network error — don't log out, could be a temporary connectivity issue
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
+
   return {
     user,
-    isAuthenticated: isTokenValid(token),
+    isAuthenticated: !!token,
     token,
     setAuth,
     logout,
