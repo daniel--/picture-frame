@@ -70,6 +70,8 @@
   line-height: 1;
   transform-origin: center;
   text-decoration: none;
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* On mobile (by viewport width), hide buttons by default and show when active */
@@ -197,6 +199,8 @@
   touch-action: none; /* Prevent scrolling when dragging */
   transition: all 0.2s ease;
   padding: 0;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .grid-image-drag-handle:active {
