@@ -3,8 +3,10 @@ import useWebSocketHook from "react-use-websocket";
 import { Image } from "../../server/db/schema.js";
 import { api } from "../api.js";
 import { WebSocketMessage } from "../../shared/websocket-types.js";
+import { useAuth } from "./useAuth.js";
 
-export function useSlideShow(token?: string | null) {
+export function useSlideShow() {
+  const { token } = useAuth();
   const [images, setImages] = useState<Image[]>([]);
   const [currentImageId, setCurrentImageId] = useState<number | null>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
