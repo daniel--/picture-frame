@@ -27,4 +27,5 @@ public/uploads
 
 *.sqlite
 
+.env
 .env.production

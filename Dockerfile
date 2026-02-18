@@ -12,6 +12,7 @@ ENV GIT_HASH=${GIT_HASH}
 # Copy package files
 COPY package*.json ./
 COPY tsconfig.json ./
+COPY tsconfig.server.json ./
 COPY vite.config.ts ./
 COPY drizzle.config.ts ./
 
@@ -25,28 +26,26 @@ COPY index.html ./
 # Copy public directory (contains static assets including PWA icons)
 COPY public ./public
 
-# Build the frontend
-RUN npm run build
+# Build the frontend and compile the server
+RUN npm run build && npm run build:server
 
 # Stage 2: Production runtime
 FROM node:20-alpine AS production
 
 WORKDIR /app
 
-# Install all dependencies (tsx is needed to run TypeScript)
+# Install production dependencies
 COPY package*.json ./
 RUN npm ci --omit=dev && \
     npm cache clean --force
 
-# Copy built files from builder
+# Copy built files from builder (frontend + compiled server)
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/index.html ./
 COPY --from=builder /app/public ./public
 
-# Copy server source files
-COPY src/server ./src/server
-COPY src/scripts ./src/scripts
-COPY tsconfig.json ./
+# Copy only what drizzle-kit needs at startup (schema source + config)
+COPY src/server/db ./src/server/db
 COPY drizzle.config.ts ./
 
 # Copy and set up entrypoint script
