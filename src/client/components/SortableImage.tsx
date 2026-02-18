@@ -3,7 +3,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { useRef } from "react";
 import { Image } from "../../server/db/schema.js";
 import { useIsMobile } from "../hooks/useMediaQuery.js";
-import { DragHandleIcon, StarIcon, DeleteIcon } from "./icons/index.js";
+import { DragHandleIcon, StarIcon, DeleteIcon, ExternalLinkIcon } from "./icons/index.js";
 
 interface SortableImageProps {
   image: Image;
@@ -133,6 +133,18 @@ export function SortableImage({
           <DeleteIcon width={16} height={16} />
         </button>
       )}
+      <a
+        className="grid-image-open-button"
+        href={image.path ?? ""}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
+        title="Open full image in new tab"
+        aria-label="Open full image in new tab"
+      >
+        <ExternalLinkIcon width={16} height={16} />
+      </a>
     </div>
   );
 }

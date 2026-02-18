@@ -7,4 +7,5 @@ export { DeleteIcon } from "./DeleteIcon.js";
 export { StarIcon } from "./StarIcon.js";
 export { DragHandleIcon } from "./DragHandleIcon.js";
 export { ClockIcon } from "./ClockIcon.js";
+export { ExternalLinkIcon } from "./ExternalLinkIcon.js";
 export type { IconProps } from "./types.js";
