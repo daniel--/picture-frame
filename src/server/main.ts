@@ -22,6 +22,7 @@ import {
   getAllInvites,
   resendInvite,
   cancelInvite,
+  deleteUser,
 } from "./users.js";
 import { AppError, ErrorType, asyncHandler, errorHandler } from "./errors.js";
 import { authenticateToken, AuthRequest } from "./auth.js";
@@ -141,6 +142,27 @@ app.get(
     const users = await getAllUsers();
 
     return res.json({ users });
+  })
+);
+
+// Delete user endpoint (protected by JWT - admin only)
+app.delete(
+  "/api/users/:id",
+  authenticateToken,
+  asyncHandler(async (req: AuthRequest, res) => {
+    const userId = parseInt(req.params.id, 10);
+
+    if (isNaN(userId)) {
+      throw new AppError("Invalid user ID", ErrorType.BAD_REQUEST);
+    }
+
+    if (req.user?.id === userId) {
+      throw new AppError("Cannot delete your own account", ErrorType.BAD_REQUEST);
+    }
+
+    await deleteUser(userId);
+
+    return res.json({ message: "User deleted successfully" });
   })
 );
 

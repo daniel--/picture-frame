@@ -337,7 +337,8 @@
     min-width: 0;
   }
 
-  .settings-invite-item {
+  .settings-invite-item,
+  .settings-user-item {
     flex-direction: column;
     align-items: stretch;
     gap: 1rem;
@@ -510,6 +511,9 @@
   border-radius: 8px;
   background-color: var(--color-bg-white);
   transition: all 0.2s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .settings-user-item:hover {

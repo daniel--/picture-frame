@@ -14,6 +14,7 @@ export const usersTable = sqliteTable("users_table", {
   password: text().notNull(),
   resetToken: text(),
   resetTokenExpiry: text(),
+  deletedAt: text(),
 });
 
 export const imagesTable = sqliteTable("images_table", {

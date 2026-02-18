@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 import crypto from "crypto";
-import { eq } from "drizzle-orm";
+import { eq, isNull } from "drizzle-orm";
 import { db } from "./db/index.js";
 import { usersTable, User, invitesTable, Invite } from "./db/schema.js";
 import { AppError, ErrorType } from "./errors.js";
@@ -114,7 +114,7 @@ export async function login(input: LoginInput): Promise<PublicUser> {
   // Find user by email
   const [user] = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
 
-  if (!user) {
+  if (!user || user.deletedAt) {
     throw new AppError("Invalid email or password", ErrorType.UNAUTHORIZED);
   }
 
@@ -412,7 +412,8 @@ export async function getAllUsers(): Promise<PublicUser[]> {
       createdAt: usersTable.createdAt,
       updatedAt: usersTable.updatedAt,
     })
-    .from(usersTable);
+    .from(usersTable)
+    .where(isNull(usersTable.deletedAt));
 
   return users;
 }
@@ -431,6 +432,24 @@ export type PublicInvite = {
   isExpired: boolean;
   isPending: boolean;
 };
+
+/**
+ * Deletes a user by ID
+ * @param userId The ID of the user to delete
+ * @throws Error if user not found
+ */
+export async function deleteUser(userId: number): Promise<void> {
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+
+  if (!user || user.deletedAt) {
+    throw new AppError("User not found", ErrorType.NOT_FOUND);
+  }
+
+  await db
+    .update(usersTable)
+    .set({ deletedAt: new Date().toISOString() })
+    .where(eq(usersTable.id, userId));
+}
 
 /**
  * Gets all invites with their status (pending, expired, used)

@@ -32,6 +32,7 @@ export function Admin() {
   const [invitesError, setInvitesError] = useState<string | null>(null);
   const [resendingInviteId, setResendingInviteId] = useState<number | null>(null);
   const [cancellingInviteId, setCancellingInviteId] = useState<number | null>(null);
+  const [removingUserId, setRemovingUserId] = useState<number | null>(null);
 
   // Fetch users when component mounts or after successful invite
   useEffect(() => {
@@ -135,6 +136,24 @@ export function Admin() {
       }
     } finally {
       setCancellingInviteId(null);
+    }
+  };
+
+  const handleRemoveUser = async (userId: number) => {
+    setRemovingUserId(userId);
+    setUsersError(null);
+    try {
+      await api(`/api/users/${userId}`, { method: "DELETE" });
+      const data = await api<{ users: User[] }>("/api/users");
+      setUsers(data.users);
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setUsersError(err.message);
+      } else {
+        setUsersError("Failed to remove user. Please try again.");
+      }
+    } finally {
+      setRemovingUserId(null);
     }
   };
 
@@ -250,6 +269,17 @@ export function Admin() {
                         Joined: {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "N/A"}
                       </div>
                     </div>
+                    {u.id !== user?.id && (
+                      <div className="settings-invite-actions">
+                        <button
+                          onClick={() => handleRemoveUser(u.id)}
+                          disabled={removingUserId === u.id}
+                          className="settings-invite-cancel-btn"
+                        >
+                          {removingUserId === u.id ? "Removing..." : "Remove"}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
