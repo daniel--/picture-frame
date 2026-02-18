@@ -18,6 +18,16 @@ interface UseAuthReturn {
   logoutAndRedirect: () => void;
 }
 
+function isTokenValid(token: string | null): boolean {
+  if (!token) return false;
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return typeof payload.exp !== "number" || payload.exp * 1000 > Date.now();
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Hook for managing authentication state
  */
@@ -43,7 +53,7 @@ export function useAuth(): UseAuthReturn {
 
   return {
     user,
-    isAuthenticated: !!token,
+    isAuthenticated: isTokenValid(token),
     token,
     setAuth,
     logout,

@@ -29,8 +29,8 @@ interface Invite {
 }
 
 export function Admin() {
-  const { user, logoutAndRedirect } = useAuth();
-  const slideshow = useSlideShow();
+  const { user, logoutAndRedirect, token } = useAuth();
+  const slideshow = useSlideShow(token);
   const { formData, setFormData, error, success, isSubmitting, handleSubmit, resetForm } =
     useUserForm();
   const [users, setUsers] = useState<User[]>([]);

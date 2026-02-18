@@ -7,10 +7,10 @@ import { ImageGrid } from "./components/ImageGrid";
 import { SlideshowControls } from "./components/SlideshowControls";
 
 export function Home() {
-  const { user, logoutAndRedirect } = useAuth();
+  const { user, logoutAndRedirect, token } = useAuth();
   const { isProcessing } = useShareTarget();
 
-  const slideshow = useSlideShow();
+  const slideshow = useSlideShow(token);
 
   const handleToggleShuffle = () => {
     const isRandomOrderEnabled = slideshow.randomOrder !== null ? slideshow.randomOrder : false;

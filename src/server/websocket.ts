@@ -1,6 +1,9 @@
 import { WebSocketServer, WebSocket } from "ws";
+import { IncomingMessage } from "http";
+import jwt from "jsonwebtoken";
 import { getAllImages, updateImageSortOrder } from "./images.js";
 import { Image } from "./db/schema.js";
+import { env } from "./env.js";
 import {
   getSlideDuration,
   setSlideDuration,
@@ -13,7 +16,20 @@ import { WebSocketMessage } from "../shared/websocket-types.js";
 
 interface ClientWebSocket extends WebSocket {
   isAlive?: boolean;
+  isAuthenticated?: boolean;
 }
+
+// Message types that mutate state and require authentication
+const AUTHENTICATED_MESSAGE_TYPES = new Set([
+  "reorder",
+  "slideshow-next",
+  "slideshow-previous",
+  "slideshow-play",
+  "slideshow-pause",
+  "slideshow-goto",
+  "slideshow-speed",
+  "slideshow-random-order",
+]);
 
 /**
  * WebSocket server for real-time image synchronization
@@ -62,9 +78,22 @@ export class ImageWebSocketServer {
     this.initializeSlideshowState();
     this.initializeRandomOrder();
 
-    this.wss.on("connection", async (ws: ClientWebSocket) => {
+    this.wss.on("connection", async (ws: ClientWebSocket, req: IncomingMessage) => {
       this.clients.add(ws);
       ws.isAlive = true;
+
+      // Validate token from query string
+      const url = new URL(req.url ?? "/", "http://localhost");
+      const token = url.searchParams.get("token");
+      ws.isAuthenticated = false;
+      if (token) {
+        try {
+          jwt.verify(token, env.JWT_SECRET);
+          ws.isAuthenticated = true;
+        } catch {
+          // Invalid or expired token — connection allowed for read-only slideshow access
+        }
+      }
 
       // Send current image list and slideshow state to newly connected client
       try {
@@ -148,6 +177,11 @@ export class ImageWebSocketServer {
    * Main message handler that delegates to specific handlers
    */
   private async handleMessage(ws: ClientWebSocket, message: WebSocketMessage): Promise<void> {
+    if (AUTHENTICATED_MESSAGE_TYPES.has(message.type) && !ws.isAuthenticated) {
+      this.sendToClient(ws, { type: "error", message: "Authentication required" });
+      return;
+    }
+
     const handler = this.messageHandlers[message.type];
 
     if (handler) {
