@@ -40,7 +40,7 @@ const RESET_TOKEN_EXPIRY_HOURS = 1;
 const INVITE_EXPIRY_DAYS = 7;
 
 // Public user type (without sensitive fields)
-export type PublicUser = Omit<User, "password" | "resetToken" | "resetTokenExpiry">;
+export type PublicUser = Omit<User, "password" | "resetToken" | "resetTokenExpiry" | "deletedAt">;
 
 /**
  * Creates a new user with a hashed password
